@@ -1,27 +1,18 @@
-import os
 import io
 import discord
-import ftplib
 
 from discord.ext import commands
-from dotenv import load_dotenv
+from ftp import Ftp
 from py_mcpe_stats import Query
 
-load_dotenv()
-SMP_IP = os.getenv('FTP_SMP_IP')
-CMP_IP = os.getenv('FTP_CMP_IP')
-SMP_UN = os.getenv('FTP_SMP_USER')
-CMP_UN = os.getenv('FTP_CMP_USER')
-PASS = os.getenv('FTP_PASS')
-
-server_smp = Query('192.95.23.132', 19132)
-server_cmp = Query('192.95.37.114', 19132)
+server_smp = Query('192.95.23.132')
+server_cmp = Query('192.95.37.114')
 
 class Server(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        
+
     @commands.Cog.listener()
     async def on_ready(self):
         print('Server tools ready')
@@ -31,43 +22,29 @@ class Server(commands.Cog):
     async def on_message(self, message):
         if message.channel.id == int('661730461206183937'):
             for attachment in message.attachments:
-                if attachment.filename.endswith('.mcstructure'):
-                    print (f'Uploading {attachment.filename}')
-                    await message.add_reaction('\U0001F504')
-                    
-                    # Retrieve attachment
-                    file = io.BytesIO()
-                    await attachment.save(file)
-                    
-                    # Initialize connection
-                    session = ftplib.FTP(CMP_IP, CMP_UN, PASS)
-                    session.cwd('/behavior_packs/vanilla/structures')
-                    
-                    # Check if name already exists
-                    if attachment.filename in session.nlst():
-                        await message.clear_reactions()
-                        await message.add_reaction('\U000026A0')
-                        file.close()
-                        session.quit()
-                        return
-                    
-                    # Send file
-                    session.storbinary(f'STOR {attachment.filename}', file)
-                    
-                    # Size verification
-                    session.sendcmd("TYPE i")
-                    osize = session.size(f'{attachment.filename}')
-                    session.sendcmd("TYPE A")
-                    print (f'Origin: {attachment.size} Destination: {osize}')
-                    if attachment.size == osize:
-                        await message.clear_reactions()
-                        await message.add_reaction('\U00002705')
-                    else:
-                        await message.clear_reactions()
-                        await message.add_reaction('\U0000274C')
-                    
-                    file.close()
-                    session.quit()
+                if not attachment.filename.endswith('.mcstructure'):
+                    break
+                
+                # Retrieve attachment
+                file = io.BytesIO()
+                await attachment.save(file)
+                
+                # "Loading" reaction
+                await message.add_reaction('\U0001F504')
+                
+                result = await Ftp.cmp_upload(self, attachment.filename, file, '/behavior_packs/vanilla/structures', attachment.size)
+                
+                file.close()
+                await message.clear_reactions()
+                if result==2:
+                    # "Duplicate" reaction
+                    await message.add_reaction('\U000026A0')
+                elif result==1:
+                    # "Success" reaction
+                    await message.add_reaction('\U00002705')
+                elif result==0:
+                    # "Failed" reaction
+                    await message.add_reaction('\U0000274C')
 
     # CMP server ping
     @commands.command(name='status')
