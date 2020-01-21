@@ -1,6 +1,6 @@
 # Majbot.py
-import os
 import discord
+import os
 
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -8,11 +8,19 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-bot = commands.Bot(command_prefix='~')
+bot = commands.Bot(
+    command_prefix='trb ',
+    activity=discord.Game(name="Welcome to BE Simulator", emoji="TechRock"),
+    case_insensitive=True
+)
 
 @bot.event
 async def on_ready():
     print("Online")
+
+@bot.command(name='alive?')
+async def alive(ctx):
+    await ctx.message.add_reaction('\U0001F44D')
 
 @bot.command(name='load')
 @commands.has_role('Admin')

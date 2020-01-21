@@ -20,21 +20,23 @@ class Server(commands.Cog):
     # CMP .mcstructure file upload
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.channel.id == int('661730461206183937'):
+        if message.channel.id in [int('661730461206183937'), int('661372317212868620')]:
             for attachment in message.attachments:
                 if not attachment.filename.endswith('.mcstructure'):
                     break
                 
+                name = attachment.filename
+                size = attachment.size
+                content = io.BytesIO()
                 # Retrieve attachment
-                file = io.BytesIO()
-                await attachment.save(file)
+                await attachment.save(content)
                 
                 # "Loading" reaction
                 await message.add_reaction('\U0001F504')
                 
-                result = await Ftp.cmp_upload(self, attachment.filename, file, '/behavior_packs/vanilla/structures', attachment.size)
+                result = await Ftp.cmp_upload(self, name, size, content, '/behavior_packs/vanilla/structures')
                 
-                file.close()
+                content.close()
                 await message.clear_reactions()
                 if result==2:
                     # "Duplicate" reaction
@@ -46,14 +48,35 @@ class Server(commands.Cog):
                     # "Failed" reaction
                     await message.add_reaction('\U0000274C')
 
-    # CMP server ping
+    # Minecraft server ping
     @commands.command(name='status')
-    async def status(self, ctx):
-        server_data = server_cmp.query()
-        if server_data.SUCCESS:
-            await ctx.send(f'{server_data.SERVER_NAME}\n{server_data.NUM_PLAYERS}/{server_data.MAX_PLAYERS} Online\n{server_data.GAME_ID} {server_data.GAME_VERSION}')
-        else:
-            await ctx.send('Offline')
+    async def status(self, ctx, content=" "):
+        if not content=="cmp":
+            smp_data = server_smp.query()
+            smp_status = discord.Embed(title="TechRock Survival")
+            smp_status.add_field(name="IP", value="survival.techrock.org", inline=False)
+            if smp_data.SUCCESS:
+                smp_status.colour=0x00ff00
+                smp_status.description="Online"
+                smp_status.add_field(name="Players", value=f'{smp_data.NUM_PLAYERS}/{smp_data.MAX_PLAYERS}', inline=True)
+                smp_status.add_field(name=smp_data.GAME_ID, value=smp_data.GAME_VERSION, inline=True)
+            else:
+                smp_status.colour=0xff0000
+                smp_status.description="Offline"
+            await ctx.send(embed=smp_status)
+        if not content=="smp":
+            cmp_data = server_cmp.query()
+            cmp_status = discord.Embed(title="TechRock Creative")
+            cmp_status.add_field(name="IP", value="creative.techrock.org", inline=False)
+            if cmp_data.SUCCESS:
+                cmp_status.colour=0x00ff00
+                cmp_status.description="Online"
+                cmp_status.add_field(name="Players", value=f'{cmp_data.NUM_PLAYERS}/{cmp_data.MAX_PLAYERS}', inline=True)
+                cmp_status.add_field(name=cmp_data.GAME_ID, value=cmp_data.GAME_VERSION, inline=True)
+            else:
+                cmp_status.colour=0xff0000
+                cmp_status.description="Offline"
+            await ctx.send(embed=cmp_status)
 
 def setup(bot):
     bot.add_cog(Server(bot))
