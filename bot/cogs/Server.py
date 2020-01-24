@@ -1,9 +1,9 @@
-import io
 import discord
+import io
 
 from discord.ext import commands
-from ftp import Ftp
 from py_mcpe_stats import Query
+from ftp import Ftp
 
 server_smp = Query('192.95.23.132')
 server_cmp = Query('192.95.37.114')
@@ -16,37 +16,45 @@ class Server(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print('Server tools ready')
+
     
+
     # CMP .mcstructure file upload
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.channel.id in [int('661730461206183937'), int('661372317212868620')]:
-            for attachment in message.attachments:
-                if not attachment.filename.endswith('.mcstructure'):
-                    break
-                
-                name = attachment.filename
-                size = attachment.size
-                content = io.BytesIO()
-                # Retrieve attachment
-                await attachment.save(content)
-                
-                # "Loading" reaction
-                await message.add_reaction('\U0001F504')
-                
-                result = await Ftp.cmp_upload(self, name, size, content, '/behavior_packs/vanilla/structures')
-                
-                content.close()
-                await message.clear_reactions()
-                if result==2:
-                    # "Duplicate" reaction
-                    await message.add_reaction('\U000026A0')
-                elif result==1:
-                    # "Success" reaction
-                    await message.add_reaction('\U00002705')
-                elif result==0:
-                    # "Failed" reaction
-                    await message.add_reaction('\U0000274C')
+    
+        if not message.channel.id in [
+            661730461206183937,
+            661372317212868620
+        ]:
+            return
+        
+        for attachment in message.attachments:
+            if not attachment.filename.endswith('.mcstructure'):
+                return
+            
+            name = attachment.filename
+            size = attachment.size
+            content = io.BytesIO()
+            
+            # Retrieve attachment
+            await attachment.save(content)
+            
+            # "Loading" reaction
+            await message.add_reaction('\U0001F504')
+            
+            # Upload .mcstructure file
+            result = await Ftp.cmp_upload(self, name, size, content, '/behavior_packs/vanilla/structures')
+            content.close()
+            
+            # Replace reaction with results
+            await message.clear_reactions()
+            if result==2: # Duplicate
+                await message.add_reaction('\U000026A0')
+            elif result==1: # Success
+                await message.add_reaction('\U00002705')
+            elif result==0: # Failed
+                await message.add_reaction('\U0000274C')
 
     # Minecraft server ping
     @commands.command(name='status')

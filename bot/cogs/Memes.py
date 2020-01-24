@@ -1,8 +1,6 @@
-import os
 import discord
-
+import re
 from discord.ext import commands
-from dotenv import load_dotenv
 
 class Memes(commands.Cog):
 
@@ -15,7 +13,7 @@ class Memes(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if ' doesnt work' in message.content.lower():
+        if re.search("do(es)? ?n'?o?t work", message.content.lower()):
             await message.channel.send('Welcome to BE')
 
     @commands.command(name='say')
