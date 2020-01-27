@@ -10,7 +10,7 @@ out in the custom user configuration will stay
 their default values from `config-default.yml`.
 """
 
-#import logging
+import logging
 import os
 from collections.abc import Mapping
 from enum import Enum
@@ -184,3 +184,22 @@ class Bot(metaclass=YAMLGetter):
 
     prefix: str
     token: str
+
+class Status(metaclass=YAMLGetter):
+    section = "status"
+
+    default: str
+    aliases: Dict[str, str]
+
+class Ftp(metaclass=YAMLGetter):
+    section = "ftp"
+
+    smp_ip: str
+    smp_pt: int
+    smp_un: str
+    smp_pw: str
+
+    cmp_ip: str
+    cmp_pt: int
+    cmp_un: str
+    cmp_pw: str

@@ -1,20 +1,15 @@
-import os
 import io
 import asyncio
 import aioftp
 
-from dotenv import load_dotenv
-load_dotenv()
-SMP_IP = os.getenv('FTP_SMP_IP')
-CMP_IP = os.getenv('FTP_CMP_IP')
-SMP_UN = os.getenv('FTP_SMP_USER')
-CMP_UN = os.getenv('FTP_CMP_USER')
-PASS = os.getenv('FTP_PASS')
+from bot.constants import Ftp as FtpConfig
 
 class Ftp:
-    async def cmp_upload(self, name, isize, content, path='/'):
+
+    async def cmp_write(self, name, isize, content, path='/'):
+    
         # Initialize connection
-        async with aioftp.ClientSession(CMP_IP, 21, CMP_UN, PASS) as client:
+        async with aioftp.ClientSession(FtpConfig.cmp_ip, FtpConfig.cmp_pt, FtpConfig.cmp_un, FtpConfig.cmp_pw) as client:
             await client.change_directory(path)
             
             # Check if name already exists
@@ -35,3 +30,16 @@ class Ftp:
             osize = int(stat['size'])
             print (f'Origin: {isize} Destination: {osize}')
             return isize == osize
+
+    async def cmp_read(self, path):
+        
+        output = io.BytesIO()
+        
+        # Initialize connection
+        async with aioftp.ClientSession(FtpConfig.cmp_ip, FtpConfig.cmp_pt, FtpConfig.cmp_un, FtpConfig.cmp_pw) as client:
+            async with client.download_stream(path) as stream:
+                async for block in stream.iter_by_block():
+                    output.write(block)
+        
+        output.seek(0)
+        return output.read()

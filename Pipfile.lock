@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "bce32d3aae7e3b7ee624a153edcd8ebab0637d3644d30486d5cc32a20351db44"
+            "sha256": "ee1a0caab0ba1071957d92e0509ee0818840bc231e8b9a1c1711af1efc31d18e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -103,14 +103,6 @@
             "editable": true,
             "git": "https://github.com/w-gao/py-mcpe-stats.git",
             "ref": "c394706cfd3358b663ff2354886e1483ae59969e"
-        },
-        "python-dotenv": {
-            "hashes": [
-                "sha256:440c7c23d53b7d352f9c94d6f70860242c2f071cf5c029dd661ccb22d64ae42b",
-                "sha256:f254bfd0c970d64ccbb6c9ebef3667ab301a71473569c991253a481f1c98dddc"
-            ],
-            "index": "pypi",
-            "version": "==0.10.5"
         },
         "pyyaml": {
             "hashes": [

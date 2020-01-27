@@ -1,3 +1,27 @@
 bot:
-    prefix:      "trb "
-    token:       !ENV "BOT_TOKEN"
+
+    prefix:     "trb "
+    token:      !ENV "BOT_TOKEN"
+
+status:
+
+    # Default server/alias to ping on blank status command
+    # "all" will ping all aliases
+    default:    "all"
+
+    aliases:
+
+        smp:    "survival.techrock.org:19132"
+        cmp:    "creative.techrock.org:19132"
+
+ftp:     
+
+    smp_ip:     !ENV "FTP_SMP_IP"
+    smp_pt:     21
+    smp_un:     !ENV "FTP_SMP_UN"
+    smp_pw:     !ENV "FTP_SMP_PW"
+
+    cmp_ip:     !ENV "FTP_CMP_IP"
+    cmp_pt:     21
+    cmp_un:     !ENV "FTP_CMP_UN"
+    cmp_pw:     !ENV "FTP_CMP_PW"
