@@ -1,0 +1,3 @@
+bot:
+    prefix:      "trb "
+    token:       !ENV "BOT_TOKEN"
