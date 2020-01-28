@@ -185,21 +185,32 @@ class Bot(metaclass=YAMLGetter):
     prefix: str
     token: str
 
-class Status(metaclass=YAMLGetter):
+class Roles(metaclass=YAMLGetter):
+    section = "guild"
+    subsection = "roles"
+
+    admin: int
+    moderator:  int
+    helper:  int
+    smp: int
+    cmp: int
+    trusted: int
+    mojang: int
+    everyone: int
+    muted: int
+    warned: int
+
+class Server(metaclass=YAMLGetter):
     section = "status"
 
     default: str
     aliases: Dict[str, str]
+    ftp: Dict[str, Dict[str, str]]
 
-class Ftp(metaclass=YAMLGetter):
-    section = "ftp"
 
-    smp_ip: str
-    smp_pt: int
-    smp_un: str
-    smp_pw: str
+MODERATION_ROLES = Roles.moderator, Roles.admin
+STAFF_ROLES = Roles.helpers, Roles.moderator, Roles.admin
 
-    cmp_ip: str
-    cmp_pt: int
-    cmp_un: str
-    cmp_pw: str
+
+
+

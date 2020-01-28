@@ -15,3 +15,8 @@ def in_channel(*channels: int):
         raise InChannelCheckFailure(*channels)
     return commands.check(predicate)
 
+def with_role(*role_ids: int) -> Callable:
+    async def predicate(ctx: Context) -> bool:
+        return with_role_check(ctx, *role_ids)
+    return commands.check(predicate)
+

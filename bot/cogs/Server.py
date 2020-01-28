@@ -1,11 +1,19 @@
 import discord
 import io
 import json
+import logging
 
 from discord.ext import commands
 from py_mcpe_stats import Query
 from bot.utils.ftp import Ftp
-from bot.constants import Status
+from bot.utils.xbox import Xblapi
+from bot.constants import Server as ServerConfig
+from bot.constants import STAFF_ROLES
+from bot.decorators import with_role
+
+log = logging.getLogger(__name__)
+
+emote = ['\U0000274C', '\U00002705', '\U000026A0', '\U0001F504']
 
 class Server(commands.Cog):
 
@@ -38,63 +46,99 @@ class Server(commands.Cog):
             await attachment.save(content)
             
             # "Loading" reaction
-            await message.add_reaction('\U0001F504')
+            await message.add_reaction(emote[3])
             
             # Upload .mcstructure file
-            result = await Ftp.cmp_write(self, name, size, content, '/behavior_packs/vanilla/structures')
+            result = await Ftp._write(self, ServerConfig.ftp['cmp'], name, size, content, '/behavior_packs/vanilla/structures')
             content.close()
             
             # Replace reaction with results
             await message.clear_reactions()
-            if result==2: # Duplicate
-                await message.add_reaction('\U000026A0')
-            elif result==1: # Success
-                await message.add_reaction('\U00002705')
-            elif result==0: # Failed
-                await message.add_reaction('\U0000274C')
+            await message.add_reaction(emote[result])
 
     # Add users to role and auto add
     # to respected server whitelist
-    @commands.has_role(['Admin', 'Moderator'])
-    @commands.group(name='add_role')
-    async def add_role(self, ctx):
-        pass
-    
-    @add_role.command(name='smp')
-    async def smp(self, ctx, user):
-        pass
+    @with_role(*STAFF_ROLES)
+    @commands.command(name='add_user')
+    async def add_user(self, ctx, server, user):
 
-    @add_role.command(name='cmp')
-    async def cmp(self, ctx, user):
-        pass
+        try:
+
+            userlist_path = ServerConfig.ftp[server]['userlist']
+
+            # Build dict for JSON entry
+            entry = {}
+            if userlist_path=='/whitelist.json':
+                entry['ignoresPlayerLimit'] = False
+            elif userlist_path=='/permissions.json':
+                entry['permission'] = 'operator'
+            else:
+                raise
+            entry['name'] = user
+            entry['xuid'] = await Xblapi.xuid(user)
+            
+            # Fetch permissions.json as list of dicts
+            perms_raw = await Ftp._read(self, ServerConfig.ftp[server], userlist_path)
+            perms = json.loads(perms_raw)
+            
+            # "Loading" reaction
+            await ctx.message.add_reaction(emote[3])
+            
+            perms.append(entry)
+            
+            # Dump list to JSON and upload
+            output = io.BytesIO()
+            size = output.write(json.dumps(perms, indent=4).encode('utf-8'))
+            result = await Ftp._write(self, ServerConfig.ftp[server], userlist_path, size, output, '/', True)
+            output.close()
+
+            # Replace reaction with results
+            await ctx.message.clear_reactions()
+            await ctx.message.add_reaction(emote[result])
+
+        except KeyError:
+
+            await ctx.send(f'`{server}` is an unconfigured alias')
+            log.error(f'Config key `{server}` for ftp could not be found.')
+            raise
 
     # List users in whitelist
-    @commands.has_role('Admin')
+    @with_role(*STAFF_ROLES)
     @commands.command(name='userlist')
-    async def userlist(self, ctx):
-        
-        perms_raw = await Ftp.cmp_read(self, '/permissions.json')
-        perms = json.loads(perms_raw)
-        
-        names = []
-        for i in range(len(perms)):
-            names.append(perms[i]['name'])
+    async def userlist(self, ctx, server='cmp'):
 
-        users = '\n'.join(names)
-        
-        await ctx.send(f'```{users}```')
-    
+        try:
+
+            path = ServerConfig.ftp[server]['userlist']
+
+            perms_raw = await Ftp._read(self, ServerConfig.ftp[server], path)
+            perms = json.loads(perms_raw)
+
+            names = []
+            for item in range(len(perms)):
+                names.append(perms[item]['name'])
+
+            users = '\n'.join(names)
+
+            await ctx.send(f'```{users}```')
+
+        except KeyError:
+
+            await ctx.send(f'`{server}` is an unconfigured alias')
+            log.error(f'Config key `{server}` for ftp could not be found.')
+            raise
+
     # Minecraft server ping
     @commands.command(name='status')
-    async def status(self, ctx, ip_port=Status.default):
+    async def status(self, ctx, ip_port=ServerConfig.status_default):
         
         if ip_port=="all":
-            servers = Status.aliases.values()
+            servers = ServerConfig.aliases.values()
         else:
             servers = ip_port.split()
         
         # Replace alias from config if parsed
-        servers = [Status.aliases.get(i,i) for i in servers]
+        servers = [ServerConfig.aliases.get(i,i) for i in servers]
         
         for server in servers:
             
