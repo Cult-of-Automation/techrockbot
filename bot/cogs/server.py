@@ -4,7 +4,6 @@ import json
 import logging
 
 from discord.ext import commands
-from py_mcpe_stats import Query
 from bot.utils.ftp import Ftp
 from bot.utils.xbox import Xblapi
 from bot.constants import Server as ServerConfig
@@ -28,10 +27,7 @@ class Server(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
 
-        if not message.channel.id in [
-            661730461206183937,
-            661372317212868620
-        ]:
+        if not message.channel.id=='661730461206183937':
             return
         
         for attachment in message.attachments:
@@ -56,8 +52,7 @@ class Server(commands.Cog):
             await message.clear_reactions()
             await message.add_reaction(emote[result])
 
-    # Add users to role and auto add
-    # to respected server whitelist
+    # Add user to respected server whitelist
     @with_role(*STAFF_ROLES)
     @commands.command(name='add_user')
     async def add_user(self, ctx, server, user):
@@ -115,8 +110,8 @@ class Server(commands.Cog):
             perms = json.loads(perms_raw)
 
             names = []
-            for item in range(len(perms)):
-                names.append(perms[item]['name'])
+            for item in perms:
+                names.append(item['name'])
 
             users = '\n'.join(names)
 
@@ -127,59 +122,6 @@ class Server(commands.Cog):
             await ctx.send(f'`{server}` is an unconfigured alias')
             log.error(f'Config key `{server}` for ftp could not be found.')
             raise
-
-    # Minecraft server ping
-    @commands.command(name='status')
-    async def status(self, ctx, ip_port=ServerConfig.status_default):
-        
-        if ip_port=="all":
-            servers = ServerConfig.aliases.values()
-        else:
-            servers = ip_port.split()
-        
-        # Replace alias from config if parsed
-        servers = [ServerConfig.aliases.get(i,i) for i in servers]
-        
-        for server in servers:
-            
-            # Set portless input to default port, 19132
-            try:
-                server_ip, server_port = server.split(":")
-            except:
-                server_ip = server
-                server_port = 19132
-
-            # Ping server
-            q = Query(server_ip, int(server_port))
-            server_data = q.query()
-            
-            # Set-up embed
-            server_status = discord.Embed(
-                title=server_ip,
-                description="Offline",
-                colour=0xff0000
-            )
-            
-            if server_data.SUCCESS:
-                server_status.colour=0x00ff00
-                server_status.description="Online"
-                server_status.add_field(
-                    name="Name",
-                    value=server_data.SERVER_NAME,
-                    inline=False
-                )
-                server_status.add_field(
-                    name="Players",
-                    value=f'{server_data.NUM_PLAYERS}/{server_data.MAX_PLAYERS}',
-                    inline=True
-                )
-                server_status.add_field(
-                    name=server_data.GAME_ID,
-                    value=server_data.GAME_VERSION,
-                    inline=True
-                )
-            
-            await ctx.send(embed=server_status)
 
 def setup(bot):
     bot.add_cog(Server(bot))

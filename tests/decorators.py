@@ -5,7 +5,7 @@ from discord.errors import NotFound
 from discord.ext import commands
 from discord.ext.commands import CheckFailure, Cog, Context
 
-from bot.utils.checks import with_role_check, without_role_check
+from tests.utils.checks import with_role_check, without_role_check
 
 class InChannelCheckFailure(CheckFailure):
     def __init__(self, *channels: int):

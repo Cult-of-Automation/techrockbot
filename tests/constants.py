@@ -67,10 +67,6 @@ def _join_var_constructor(loader, node):
 yaml.SafeLoader.add_constructor("!ENV", _env_var_constructor)
 yaml.SafeLoader.add_constructor("!JOIN", _join_var_constructor)
 
-# Pointing old tag to !ENV constructor to avoid breaking existing configs
-yaml.SafeLoader.add_constructor("!REQUIRED_ENV", _env_var_constructor)
-
-
 with open("config-default.yml", encoding="UTF-8") as f:
     _CONFIG_YAML = yaml.safe_load(f)
 
@@ -185,6 +181,7 @@ class Bot(metaclass=YAMLGetter):
     prefix: str
     token: str
     test_token: str
+    
 
 class Roles(metaclass=YAMLGetter):
     section = "guild"

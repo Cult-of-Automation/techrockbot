@@ -2,6 +2,7 @@ bot:
 
     prefix:                         "trb "
     token:                          !ENV "BOT_TOKEN"
+    test_token:                     !ENV "TEST_TOKEN"
 
 guild:
     
@@ -23,7 +24,7 @@ guild:
         admin:      &ADMIN_ROLE     403101940034306048
         moderator:  &MOD_ROLE       455833793199079434
         helper:     &HELPER_ROLE    603138681280135178
-        smp:                        403102052894638081
+        smp:        &MEMBER_ROLE    403102052894638081
         cmp:                        623741560839864325
         trusted:    &TRUSTED_ROLE   403105260627034113
         mojang:                     646209238464462860
@@ -35,12 +36,14 @@ status:
 
     # Default server/alias to ping on blank status command
     # "all" will ping all aliases
-    status_default:    "all"
+    default:    "all"
 
     aliases:
 
         smp:                        "survival.techrock.org:19132"
         cmp:                        "creative.techrock.org:19132"
+
+server:
 
     ftp:     
 

@@ -17,3 +17,4 @@ python_version = "3.7"
 
 [scripts]
 start = "python3 -m bot"
+test = "python3 -m tests"
