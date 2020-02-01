@@ -1,0 +1,25 @@
+prefix:
+    - "trb "
+
+status:
+
+    # Default server/alias to ping on blank status command
+    # "all" will ping all aliases
+    default:    None
+
+    aliases:
+
+guild:
+    
+    id:                             
+
+    roles:
+
+        admin:      &ADMIN_ROLE     
+        moderator:  &MOD_ROLE       
+        helper:     &HELPER_ROLE    
+        member:     &MEMBER_ROLE    
+        trusted:    &TRUSTED_ROLE   
+        everyone:                   
+        muted:      &MUTED_ROLE     
+        warned:     &WARNED_ROLE    

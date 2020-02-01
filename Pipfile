@@ -9,6 +9,7 @@ aioftp = "~=0.15.0"
 aiohttp = "~=3.5"
 pyyaml = "~=5.1"
 py-mcpe-stats = {editable = true,git = "https://github.com/w-gao/py-mcpe-stats.git"}
+logmatic-python = "*"
 
 [dev-packages]
 

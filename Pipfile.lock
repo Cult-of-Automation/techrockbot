@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ee1a0caab0ba1071957d92e0509ee0818840bc231e8b9a1c1711af1efc31d18e"
+            "sha256": "88fb717f57cd57fc205f509bbc353e4ed1cad5855e54d63bff0244f2e219f862"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -77,6 +77,13 @@
             ],
             "version": "==2.8"
         },
+        "logmatic-python": {
+            "hashes": [
+                "sha256:0c15ac9f5faa6a60059b28910db642c3dc7722948c3cc940923f8c9039604342"
+            ],
+            "index": "pypi",
+            "version": "==0.1.7"
+        },
         "multidict": {
             "hashes": [
                 "sha256:13f3ebdb5693944f52faa7b2065b751cb7e578b8dd0a5bb8e4ab05ad0188b85e",
@@ -103,6 +110,12 @@
             "editable": true,
             "git": "https://github.com/w-gao/py-mcpe-stats.git",
             "ref": "c394706cfd3358b663ff2354886e1483ae59969e"
+        },
+        "python-json-logger": {
+            "hashes": [
+                "sha256:b7a31162f2a01965a5efb94453ce69230ed208468b0bbc7fdfc56e6d8df2e281"
+            ],
+            "version": "==0.1.11"
         },
         "pyyaml": {
             "hashes": [

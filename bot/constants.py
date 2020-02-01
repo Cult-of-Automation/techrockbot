@@ -52,7 +52,6 @@ def _env_var_constructor(loader, node):
 
     return os.getenv(key, default)
 
-
 def _join_var_constructor(loader, node):
     """
     Implements a custom YAML tag for concatenating other tags in
@@ -63,17 +62,11 @@ def _join_var_constructor(loader, node):
     fields = loader.construct_sequence(node)
     return "".join(str(x) for x in fields)
 
-
 yaml.SafeLoader.add_constructor("!ENV", _env_var_constructor)
 yaml.SafeLoader.add_constructor("!JOIN", _join_var_constructor)
 
-# Pointing old tag to !ENV constructor to avoid breaking existing configs
-yaml.SafeLoader.add_constructor("!REQUIRED_ENV", _env_var_constructor)
-
-
 with open("config-default.yml", encoding="UTF-8") as f:
     _CONFIG_YAML = yaml.safe_load(f)
-
 
 def _recursive_update(original, new):
     """
@@ -93,13 +86,11 @@ def _recursive_update(original, new):
         else:
             original[key] = new[key]
 
-
 if Path("config.yml").exists():
     log.info("Found `config.yml` file, loading constants from it.")
     with open("config.yml", encoding="UTF-8") as f:
         user_config = yaml.safe_load(f)
     _recursive_update(_CONFIG_YAML, user_config)
-
 
 def check_required_keys(keys):
     """
@@ -120,14 +111,12 @@ def check_required_keys(keys):
             )
             raise
 
-
 try:
     required_keys = _CONFIG_YAML['config']['required_keys']
 except KeyError:
     pass
 else:
     check_required_keys(required_keys)
-
 
 class YAMLGetter(type):
     """
@@ -186,6 +175,11 @@ class Bot(metaclass=YAMLGetter):
     token: str
     test_token: str
 
+class Guild(metaclass=YAMLGetter):
+    section = "guild"
+    
+    id: int
+
 class Roles(metaclass=YAMLGetter):
     section = "guild"
     subsection = "roles"
@@ -214,7 +208,3 @@ class Server(metaclass=YAMLGetter):
 
 MODERATION_ROLES = Roles.moderator, Roles.admin
 STAFF_ROLES = Roles.helper, Roles.moderator, Roles.admin
-
-
-
-

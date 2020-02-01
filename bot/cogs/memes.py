@@ -10,10 +10,6 @@ class Memes(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_ready(self):
-        print('Memes are loaded')
-
-    @commands.Cog.listener()
     async def on_message(self, message):
         if re.search(" do(es)? ?n'?o?t work", message.content.lower()):
             await message.channel.send('Welcome to BE')

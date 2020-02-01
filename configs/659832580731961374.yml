@@ -1,0 +1,16 @@
+prefix:
+- 'trb '
+guild:
+    id: 659832580731961374
+    roles:
+        admin: 661374667994562560
+        everyone: null
+        helper: null
+        member: null
+        moderator: null
+        muted: null
+        trusted: null
+        warned: null
+status:
+    aliases: null
+    default: None

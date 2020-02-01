@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 from py_mcpe_stats import Query
 
-from bot.constants import Status as StatusConfig
+from tests.constants import Status as StatusConfig
 
 class Status(commands.Cog):
 

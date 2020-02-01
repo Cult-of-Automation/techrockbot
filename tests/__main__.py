@@ -3,17 +3,14 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import when_mentioned_or
 
+from tests.bot import Bot
 from tests.constants import Bot as BotConfig
 
-bot = commands.Bot(
+bot = Bot(
     command_prefix=when_mentioned_or(BotConfig.prefix),
-    activity=discord.Game(name="DDLC"),
+    activity=discord.CustomActivity(name="Welcome to BE"),
     case_insensitive=True
 )
-
-@bot.event
-async def on_ready():
-    print("Bot online")
 
 @bot.group()
 @commands.has_role('Admin')
@@ -23,21 +20,21 @@ async def cog(ctx):
 
 @cog.command(name='load')
 async def load(ctx, extension):
-    bot.load_extension(f'bot.cogs.{extension}')
-    print(f'{extension} loaded')
+    bot.load_extension(f'tests.cogs.{extension}')
+    print(f'Cog {extension} loaded')
     await ctx.send(f'{extension} loaded')
 
 @cog.command(name='unload')
 async def unload(ctx, extension):
-    bot.unload_extension(f'bot.cogs.{extension}')
-    print(f'{extension} unloaded')
+    bot.unload_extension(f'tests.cogs.{extension}')
+    print(f'Cog {extension} unloaded')
     await ctx.send(f'{extension} unloaded')
 
 @cog.command(name='reload')
 async def reload(ctx, extension):
-    bot.unload_extension(f'bot.cogs.{extension}')
-    bot.load_extension(f'bot.cogs.{extension}')
-    print(f'{extension} reloaded')
+    bot.unload_extension(f'tests.cogs.{extension}')
+    bot.load_extension(f'tests.cogs.{extension}')
+    print(f'Cog {extension} reloaded')
     await ctx.send(f'{extension} reloaded')
 
 bot.load_extension("tests.cogs.guilds")
@@ -45,5 +42,6 @@ bot.load_extension("tests.cogs.server")
 
 bot.load_extension("tests.cogs.memes")
 bot.load_extension("tests.cogs.status")
+bot.load_extension("tests.cogs.mcbecl")
 
 bot.run(BotConfig.test_token)
