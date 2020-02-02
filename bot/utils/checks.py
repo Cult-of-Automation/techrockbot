@@ -3,9 +3,7 @@ from typing import Callable
 
 from discord.ext.commands import Cog, Command, Context
 
-
 log = logging.getLogger(__name__)
-
 
 def in_channel_check(ctx: Context, *channel_ids: int) -> bool:
     """Checks if the command was executed inside the list of specified channels."""
@@ -29,7 +27,6 @@ def with_role_check(ctx: Context, *role_ids: int) -> bool:
     log.info(f"{ctx.author} does not have the required role to use "
               f"the '{ctx.command.name}' command, so the request is rejected.")
     return False
-
 
 def without_role_check(ctx: Context, *role_ids: int) -> bool:
     """Returns True if the user does not have any of the roles in role_ids."""

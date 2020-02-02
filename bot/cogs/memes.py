@@ -15,7 +15,7 @@ class Memes(commands.Cog):
             await message.channel.send('Welcome to BE')
 
     @commands.command(name='alive')
-    async def alive(ctx):
+    async def alive(self, ctx):
         await ctx.message.add_reaction('\U0001F44D')
 
     @commands.command(name='say')

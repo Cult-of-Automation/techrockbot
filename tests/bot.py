@@ -1,7 +1,6 @@
 import logging
 from discord.ext import commands
 
-logging.getLogger('bot').setLevel(logging.DEBUG)
 log = logging.getLogger('bot')
 
 class Bot(commands.Bot):

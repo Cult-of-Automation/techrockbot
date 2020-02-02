@@ -11,11 +11,11 @@ TechRock has no affiliation with Minecraft, Mojang or Microsoft.
 ## Features
 
 - Ping TechRock servers for status
+- Retrieves changelog articles for new MCBE updates
 - Upload .mcstructure files from designated channel to server
 
 Planned:
 
-- Retrieves changelog articles for new MCBE updates
 - Retrieves new server applications for voting
 Auto-add roles, retrieves Xbox username XUID for server permissions
 - Add MoJira bugs to bug index
