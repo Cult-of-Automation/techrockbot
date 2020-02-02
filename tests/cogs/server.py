@@ -12,7 +12,12 @@ from tests.decorators import with_role
 
 log = logging.getLogger(__name__)
 
-emote = ['\U0000274C', '\U00002705', '\U000026A0', '\U0001F504']
+emote = ['\U00002705', '\U0000274C', '\U000026A0', '\U0001F504']
+errors = [
+    '           Okay',
+    'Transfer Failed',
+    ' Already Exists'
+]
 
 class Server(commands.Cog):
 
@@ -23,30 +28,41 @@ class Server(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
 
-        if not message.channel.id=='661372317212868620':
+        if message.channel.id != 661372317212868620 and message.attachments:
             return
         
+        # "Loading" reaction
+        await message.add_reaction(emote[3])
+
+        filelog = []
+        errno = 0
         for attachment in message.attachments:
+
+            file_name = attachment.filename
+            file_size = attachment.size
+            path = '/behavior_packs/vanilla/structures'
+
             if not attachment.filename.endswith('.mcstructure'):
-                return
-            
-            name = attachment.filename
-            size = attachment.size
-            content = io.BytesIO()
-            
-            # Retrieve attachment
-            await attachment.save(content)
-            
-            # "Loading" reaction
-            await message.add_reaction(emote[3])
-            
-            # Upload .mcstructure file
-            result = await Ftp._write(self, ServerConfig.ftp['cmp'], name, size, content, '/behavior_packs/vanilla/structures')
-            content.close()
-            
-            # Replace reaction with results
-            await message.clear_reactions()
-            await message.add_reaction(emote[result])
+                continue
+
+            with io.BytesIO() as file_in:
+                # Retrieve attachment
+                await attachment.save(file_in)
+                # Upload .mcstructure file
+                result = await Ftp._write(self, ServerConfig.ftp['cmp'], file_name, file_size, file_in, path)
+
+            filelog.append(f'{errors[result]} | {file_name}')
+            if errno < result:
+                errno = result
+
+        # Replace reaction with results
+        await message.clear_reactions()
+        await message.add_reaction(emote[errno])
+
+        # Send errors on multiple files        
+        if len(message.attachments) > 1 and errno:
+            error_list = '\n'.join(filelog)
+            message.channel.send(f'```{error_list}```')
 
     # Add user to respected server whitelist
     @with_role(*STAFF_ROLES)
@@ -56,6 +72,9 @@ class Server(commands.Cog):
         try:
 
             userlist_path = ServerConfig.ftp[server]['userlist']
+            
+            # "Loading" reaction
+            await ctx.message.add_reaction(emote[3])
 
             # Build dict for JSON entry
             entry = {}
@@ -72,16 +91,12 @@ class Server(commands.Cog):
             perms_raw = await Ftp._read(self, ServerConfig.ftp[server], userlist_path)
             perms = json.loads(perms_raw)
             
-            # "Loading" reaction
-            await ctx.message.add_reaction(emote[3])
-            
             perms.append(entry)
             
             # Dump list to JSON and upload
-            output = io.BytesIO()
-            size = output.write(json.dumps(perms, indent=4).encode('utf-8'))
-            result = await Ftp._write(self, ServerConfig.ftp[server], userlist_path, size, output, '/', True)
-            output.close()
+            with io.BytesIO() as output:
+                size = output.write(json.dumps(perms, indent=4).encode('utf-8'))
+                result = await Ftp._write(self, ServerConfig.ftp[server], userlist_path, size, output, '/', True)
 
             # Replace reaction with results
             await ctx.message.clear_reactions()
@@ -89,7 +104,7 @@ class Server(commands.Cog):
 
         except KeyError:
 
-            await ctx.send(f'`{server}` is an unconfigured alias')
+            await ctx.send(f'`{server}` is an unconfigured server alias')
             log.error(f'Config key `{server}` for ftp could not be found.')
             raise
 
@@ -102,8 +117,8 @@ class Server(commands.Cog):
 
             path = ServerConfig.ftp[server]['userlist']
 
-            perms_raw = await Ftp._read(self, ServerConfig.ftp[server], path)
-            perms = json.loads(perms_raw)
+            with await Ftp._read(self, ServerConfig.ftp[server], path) as f:
+                perms = json.loads(f)
 
             names = []
             for item in perms:
