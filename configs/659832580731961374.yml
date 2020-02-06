@@ -1,16 +1,33 @@
+cooldown:
+    memes:
+    - true
+    - 3
+    - 120
+group:
+    mods:
+    - admin
+    - moderator
+    - helper
+    staff:
+    - admin
+    - moderator
+    - helper
 prefix:
 - 'trb '
-guild:
-    id: 659832580731961374
-    roles:
-        admin: 661374667994562560
-        everyone: null
-        helper: null
-        member: null
-        moderator: null
-        muted: null
-        trusted: null
-        warned: null
+- .
+roles:
+    '@everyone': 659832580731961374
+    admin: 661374667994562560
+    helper: 674220371599294465
+    moderator: 674181171659145266
+    trb: 674185654955147264
 status:
-    aliases: null
-    default: None
+    aliases:
+        cmp: creative.techrock.org:19132
+        smp: survival.techrock.org:19132
+    default: all
+toggle:
+    memes: true
+updates:
+    beta: 664813652112703500
+    release: 661372317212868620

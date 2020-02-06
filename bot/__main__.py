@@ -1,22 +1,25 @@
 # Bot for the TechRock Discord
 import discord
-from discord.ext import commands
-from discord.ext.commands import when_mentioned_or
 
 from bot.bot import Bot
 from bot.constants import Bot as BotConfig
+from bot.variables import _prefix
 
 bot = Bot(
-    command_prefix=when_mentioned_or(BotConfig.prefix),
+    command_prefix=_prefix,
     activity=discord.CustomActivity(name='Welcome to BE'),
     case_insensitive=True
 )
 
-bot.load_extension("bot.cogs.guilds")
-bot.load_extension("bot.cogs.server")
+# Commands, bot function
+bot.load_extension('tests.cogs.error_handler')
+bot.load_extension('tests.cogs.help')
+bot.load_extension('tests.cogs.guilds')
+bot.load_extension('tests.cogs.server')
 
-bot.load_extension("bot.cogs.memes")
-bot.load_extension("bot.cogs.status")
-bot.load_extension("bot.cogs.mcbecl")
+# Feature cogs
+bot.load_extension('tests.cogs.memes')
+bot.load_extension('tests.cogs.status')
+bot.load_extension('tests.cogs.mcbecl')
 
 bot.run(BotConfig.token)

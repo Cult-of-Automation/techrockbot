@@ -1,25 +1,26 @@
 prefix:
-    - "trb "
-
+- "trb "
+roles:
+group:
+    mods:
+    - "admin"
+    - "moderator"
+    staff:
+    - "admin"
+    - "moderator"
+    - "helper"
 status:
-
     # Default server/alias to ping on blank status command
     # "all" will ping all aliases
-    default:    None
-
+    default: "all"
     aliases:
-
-guild:
-    
-    id:                             
-
-    roles:
-
-        admin:      &ADMIN_ROLE     
-        moderator:  &MOD_ROLE       
-        helper:     &HELPER_ROLE    
-        member:     &MEMBER_ROLE    
-        trusted:    &TRUSTED_ROLE   
-        everyone:                   
-        muted:      &MUTED_ROLE     
-        warned:     &WARNED_ROLE    
+cooldown:
+    memes: 
+    - False
+    - 3
+    - 120
+updates:
+    beta: 
+    release: 
+toggle:
+    memes: False

@@ -1,12 +1,13 @@
 import discord
 import logging
 import os
+import yaml
 
 from discord.ext import commands
 from pathlib import Path
-from typing import Dict, List
 
-import yaml
+from bot.variables import GuildConfig, _get
+from bot.utils.checks import mod_command_check
 
 log = logging.getLogger(__name__)
 
@@ -14,6 +15,9 @@ class Guilds(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    async def cog_check(self, ctx):
+        return mod_command_check(ctx)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
@@ -24,79 +28,130 @@ class Guilds(commands.Cog):
             return
 
         log.info(f'No config for {guild.name} found, creating {guild.id}.yml')
+        # Load default config file as template
         with open('configs/default.yml', encoding='utf-8') as f:
             default = yaml.safe_load(f)
 
-        default['guild']['id'] = guild.id
+        # Build dictionary of role ids in config
+        default['roles'] = {role.name.lower():role.id for role in guild.roles}
 
-        # Build Dict for parsing id from roles
-        roleids = {}
-        for role in guild.roles:
-            roleids[role.name.lower] = role.id
+        # Remove roles from groups if they do not exist
+        for group in default['group'].keys():
+            for role in default['group'][group]:
+                if role not in default['roles'].keys():
+                    default['group'][group].remove(role)
 
-        for role in default['guild']['roles']:
-            try:
-                default['guild']['roles'][role] = roleids[role]
-            except:
-                log.info(f'Role {role} not found')
-
+        # Create guild config file
         with open(f'configs/{guild.id}.yml', 'w', encoding='utf-8') as f:
             yaml.dump(default, f, default_flow_style=False, indent=4)
 
-    @commands.command()
-    async def mockjoin(self, ctx):
-    
-        guild = ctx.guild
-        
-        os.remove(f'configs/{guild.id}.yml')
+    @commands.command(name = 'reset_config')
+    async def reset_config(self, ctx):
+        """Reset guild configuation to default"""
+        if Path(f'configs/{ctx.guild.id}.yml').exists():
+            os.remove(f'configs/{ctx.guild.id}.yml')
+        await self.on_guild_join(ctx.guild)
 
-        log.info(f'No config for {guild.name} found, creating {guild.id}.yml')
-        with open('configs/default.yml', encoding='utf-8') as f:
-            default = yaml.safe_load(f)
+    @commands.group(name = 'prefix')
+    async def _prefix(self, ctx):
+        """List/Manage prefixes for TRB"""
+        prefixes_list = _get(ctx.guild.id, 'prefix')
+        prefixes = '`, `'.join(prefixes_list)
+        await ctx.send(f'`{prefixes}`')
 
-        default['guild']['id'] = guild.id
-
-        # Build Dict for parsing id from roles
-        guildroles = {}
-        for role in guild.roles:
-            guildroles[role.name.lower()] = role.id
-        
-        for role in default['guild']['roles']:
-            try:
-                default['guild']['roles'][role] = guildroles[role]
-            except:
-                log.info(f'Role {role} not found')
-
-        with open(f'configs/{guild.id}.yml', 'w', encoding='utf-8') as f:
-            yaml.dump(default, f, default_flow_style=False, indent=4)
-
-    @commands.command(name = 'add_prefix')
-    async def add_prefix(self, ctx, prefix):
-        with open(f'configs/{ctx.guild.id}.yml', 'r+') as f:
-            guildconfig = yaml.safe_load(f)
-            if prefix in guildconfig['bot']['prefix']:
+    @_prefix.command(name = 'add')
+    async def _prefix_add(self, ctx, prefix):
+        """Add a prefix for TRB"""
+        with GuildConfig(ctx.guild.id) as guildconfig:
+            if prefix in guildconfig['prefix']:
                 await ctx.send(f'`{prefix}` is already a prefix')
                 return
-            guildconfig['bot']['prefix'].append(prefix)
-            await ctx.send(f'Added `{prefix}` as a prefix')
-            f.seek(0)
-            yaml.dump(guildconfig, f, default_flow_style=False, indent=4)
-            f.truncate()
+            guildconfig['prefix'].append(prefix)
+        await ctx.send(f'Added `{prefix}` as a prefix')
 
-    @commands.command(name = 'remove_prefix')
-    async def remove_prefix(self, ctx, prefix):
-        with open(f'configs/{ctx.guild.id}.yml', 'r+') as f:
-            guildconfig = yaml.safe_load(f)
-            if prefix not in guildconfig['bot']['prefix']:
+    @_prefix.command(name = 'remove')
+    async def _prefix_remove(self, ctx, prefix):
+        """Remove a prefix for TRB"""
+        with GuildConfig(ctx.guild.id) as guildconfig:
+            if prefix not in guildconfig['prefix']:
                 await ctx.send(f'`{prefix}` is not a prefix')
                 return
-            guildconfig['bot']['prefix'].remove(prefix)
-            await ctx.send(f'Removed `{prefix}` as a prefix')
-            if len(guildconfig['bot']['prefix'])==0:
+            guildconfig['prefix'].remove(prefix)
+            if len(guildconfig['prefix'])==0:
                 await ctx.send('Note: TRB commands can be invoked by mentioning')
-            f.seek(0)
-            yaml.dump(guildconfig, f, default_flow_style=False, indent=4)
-            f.truncate()
+        await ctx.send(f'Removed `{prefix}` as a prefix')
+
+    @commands.group(name = 'groups')
+    async def groups(self, ctx):
+        """List/manage permission groups for TRB commands"""
+
+        if ctx.invoked_subcommand is None:
+
+            groups = _get(ctx.guild.id, 'group')
+            mods = groups['mods']
+            staff = groups['staff']
+            others = []
+    
+            # Combine groups without duplicates
+            unique = set(mods + staff)
+            
+            for role in ctx.guild.roles:
+                if role.name.lower() not in unique:
+                    others.append(role.name.lower())
+    
+            mods_roles = '\n-'.join(mods)
+            staff_roles = '\n-'.join(staff)
+            others_roles = '\n-'.join(others)
+    
+            group_list = discord.Embed(title=f'{ctx.guild.name} Role Groups',colour=0x4b4740)
+            group_list.add_field(name='Moderators',value=f'-{mods_roles}')
+            group_list.add_field(name='Staff',value=f'-{staff_roles}')
+            group_list.add_field(name='Others',value=f'-{others_roles}')
+            await ctx.send(embed=group_list)
+
+    @groups.command(name = 'add')
+    async def groups_add(self, ctx, role, group=None):
+        """Add a role to a group"""
+
+        # Check if role exists
+        roleid = None
+        for r in ctx.guild.roles:
+            if role==r.name:
+                roleid = r.id
+                break
+        if roleid==None:
+            await ctx.send(f'`{role}` role for {ctx.guild.name} cannot be found')
+            return
+
+        role = role.lower()
+        group = group.lower() if group is not None else None
+
+        with GuildConfig(ctx.guild.id) as guildconfig:
+            # Add roleid to guild config dictionary if not already
+            if role not in guildconfig['roles']:
+                guildconfig['roles'].update({role: roleid})
+            if group is None:
+                return
+            if role in guildconfig['group'][group]:
+                await ctx.send(f'`{role}` role is already in {group}')
+                return
+            guildconfig['group'][group].append(role)
+        await ctx.send(f'Added `{role}` role as {group}')
+
+    @groups.command(name = 'remove_role')
+    async def groups_remove(self, ctx, role, group):
+        """Remove a role from a group"""
+        role = role.lower()
+        group = group.lower()
+        with GuildConfig(ctx.guild.id) as guildconfig:
+            if role not in guildconfig['group'][group]:
+                await ctx.send(f'`{role}` role is not in {group}')
+                return
+            if role=='admin':
+                await ctx.send(f'Cannot remove Admin role')
+                return
+            guildconfig['group'][group].remove(role)
+        await ctx.send(f'Removed `{role}` role as {group}')
 
 def setup(bot):
     bot.add_cog(Guilds(bot))

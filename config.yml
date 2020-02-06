@@ -1,6 +1,4 @@
 bot:
-
-    prefix:                         "trb "
     token:                          !ENV "BOT_TOKEN"
     test_token:                     !ENV "TEST_TOKEN"
 

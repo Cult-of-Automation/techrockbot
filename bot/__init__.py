@@ -83,5 +83,6 @@ for key, value in logging.Logger.manager.loggerDict.items():
 
 # Silence irrelevant loggers
 logging.getLogger('aio_pika').setLevel(logging.ERROR)
+logging.getLogger('aioftp').setLevel(logging.ERROR)
 logging.getLogger('discord').setLevel(logging.ERROR)
 logging.getLogger('websockets').setLevel(logging.ERROR)

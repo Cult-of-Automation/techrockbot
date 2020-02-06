@@ -6,9 +6,9 @@ import logging
 from discord.ext import commands
 from tests.utils.ftp import Ftp
 from tests.utils.xbox import Xblapi
+from tests.variables import _get
 from tests.constants import Server as ServerConfig
-from tests.constants import STAFF_ROLES
-from tests.decorators import with_role
+from tests.decorators import staff_command
 
 log = logging.getLogger(__name__)
 
@@ -20,17 +20,22 @@ errors = [
 ]
 
 class Server(commands.Cog):
+    """Currently only for TechRock Discord"""
 
     def __init__(self, bot):
         self.bot = bot
+
+    # Temporary TechRock-only check
+    async def cog_check(self, ctx):
+        return ctx.guild.id==659832580731961374
 
     # CMP .mcstructure file upload
     @commands.Cog.listener()
     async def on_message(self, message):
 
-        if message.channel.id != 661372317212868620 and message.attachments:
+        if message.channel.id != 661372317212868620 or not message.attachments:
             return
-        
+
         # "Loading" reaction
         await message.add_reaction(emote[3])
 
@@ -65,8 +70,8 @@ class Server(commands.Cog):
             message.channel.send(f'```{error_list}```')
 
     # Add user to respected server whitelist
-    @with_role(*STAFF_ROLES)
-    @commands.command(name='add_user')
+    @commands.command(name='add_user', hidden=True)
+    @staff_command()
     async def add_user(self, ctx, server, user):
 
         try:
@@ -109,27 +114,21 @@ class Server(commands.Cog):
             raise
 
     # List users in whitelist
-    @with_role(*STAFF_ROLES)
-    @commands.command(name='userlist')
+    @commands.command(name='userlist', hidden=True)
+    @staff_command()
     async def userlist(self, ctx, server='cmp'):
 
         try:
-
             path = ServerConfig.ftp[server]['userlist']
-
             with await Ftp._read(self, ServerConfig.ftp[server], path) as f:
                 perms = json.loads(f)
-
             names = []
             for item in perms:
                 names.append(item['name'])
-
             users = '\n'.join(names)
-
             await ctx.send(f'```{users}```')
 
         except KeyError:
-
             await ctx.send(f'`{server}` is an unconfigured alias')
             log.error(f'Config key `{server}` for ftp could not be found.')
             raise

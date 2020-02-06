@@ -1,19 +1,8 @@
-"""
-Loads bot configuration from YAML files.
-By default, this simply loads the default
-configuration located at `config-default.yml`.
-If a file called `config.yml` is found in the
-project directory, the default configuration
-is recursively updated with any settings from
-the custom configuration. Any settings left
-out in the custom user configuration will stay
-their default values from `config-default.yml`.
-"""
-
+# Original from Python Discord Bot
+# https://github.com/python-discord/bot
 import logging
 import os
 from collections.abc import Mapping
-from enum import Enum
 from pathlib import Path
 from typing import Dict, List
 
@@ -65,32 +54,8 @@ def _join_var_constructor(loader, node):
 yaml.SafeLoader.add_constructor("!ENV", _env_var_constructor)
 yaml.SafeLoader.add_constructor("!JOIN", _join_var_constructor)
 
-with open("config-default.yml", encoding="UTF-8") as f:
+with open("config.yml", encoding="UTF-8") as f:
     _CONFIG_YAML = yaml.safe_load(f)
-
-def _recursive_update(original, new):
-    """
-    Helper method which implements a recursive `dict.update`
-    method, used for updating the original configuration with
-    configuration specified by the user.
-    """
-
-    for key, value in original.items():
-        if key not in new:
-            continue
-
-        if isinstance(value, Mapping):
-            if not any(isinstance(subvalue, Mapping) for subvalue in value.values()):
-                original[key].update(new[key])
-            _recursive_update(original[key], new[key])
-        else:
-            original[key] = new[key]
-
-if Path("config.yml").exists():
-    log.info("Found `config.yml` file, loading constants from it.")
-    with open("config.yml", encoding="UTF-8") as f:
-        user_config = yaml.safe_load(f)
-    _recursive_update(_CONFIG_YAML, user_config)
 
 def check_required_keys(keys):
     """
@@ -119,33 +84,6 @@ else:
     check_required_keys(required_keys)
 
 class YAMLGetter(type):
-    """
-    Implements a custom metaclass used for accessing
-    configuration data by simply accessing class attributes.
-    Supports getting configuration from up to two levels
-    of nested configuration through `section` and `subsection`.
-    `section` specifies the YAML configuration section (or "key")
-    in which the configuration lives, and must be set.
-    `subsection` is an optional attribute specifying the section
-    within the section from which configuration should be loaded.
-    Example Usage:
-        # config.yml
-        bot:
-            prefixes:
-                direct_message: ''
-                guild: '!'
-        # config.py
-        class Prefixes(metaclass=YAMLGetter):
-            section = "bot"
-            subsection = "prefixes"
-        # Usage in Python code
-        from config import Prefixes
-        def get_prefix(bot, message):
-            if isinstance(message.channel, PrivateChannel):
-                return Prefixes.direct_message
-            return Prefixes.guild
-    """
-
     subsection = None
 
     def __getattr__(cls, name):
@@ -166,45 +104,14 @@ class YAMLGetter(type):
     def __getitem__(cls, name):
         return cls.__getattr__(name)
 
-
 # Dataclasses
 class Bot(metaclass=YAMLGetter):
     section = "bot"
 
-    prefix: str
     token: str
     test_token: str
-
-class Guild(metaclass=YAMLGetter):
-    section = "guild"
-    
-    id: int
-
-class Roles(metaclass=YAMLGetter):
-    section = "guild"
-    subsection = "roles"
-
-    admin: int
-    moderator:  int
-    helper:  int
-    smp: int
-    cmp: int
-    trusted: int
-    mojang: int
-    everyone: int
-    muted: int
-    warned: int
-
-class Status(metaclass=YAMLGetter):
-    section = "status"
-
-    default: str
-    aliases: Dict[str, str]
 
 class Server(metaclass=YAMLGetter):
     section = "server"
 
     ftp: Dict[str, Dict[str, str]]
-
-MODERATION_ROLES = Roles.moderator, Roles.admin
-STAFF_ROLES = Roles.helper, Roles.moderator, Roles.admin
