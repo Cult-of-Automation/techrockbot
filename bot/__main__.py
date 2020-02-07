@@ -12,14 +12,14 @@ bot = Bot(
 )
 
 # Commands, bot function
-bot.load_extension('tests.cogs.error_handler')
-bot.load_extension('tests.cogs.help')
-bot.load_extension('tests.cogs.guilds')
-bot.load_extension('tests.cogs.server')
+bot.load_extension('bot.cogs.error_handler')
+bot.load_extension('bot.cogs.help')
+bot.load_extension('bot.cogs.guilds')
+bot.load_extension('bot.cogs.server')
 
 # Feature cogs
-bot.load_extension('tests.cogs.memes')
-bot.load_extension('tests.cogs.status')
-bot.load_extension('tests.cogs.mcbecl')
+bot.load_extension('bot.cogs.memes')
+bot.load_extension('bot.cogs.status')
+bot.load_extension('bot.cogs.mcbecl')
 
 bot.run(BotConfig.token)

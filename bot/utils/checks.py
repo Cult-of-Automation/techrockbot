@@ -14,7 +14,7 @@ def staff_command_check(ctx: Context) -> bool:
 
     # Is owner
     if ctx.author==ctx.guild.owner:
-        return
+        return True
 
     # Get guild configured staff roles
     staff_roles = []
@@ -38,7 +38,7 @@ def mod_command_check(ctx: Context) -> bool:
 
     # Is owner
     if ctx.author==ctx.guild.owner:
-        return
+        return True
 
     # Get guild configured staff roles
     mod_roles = []
