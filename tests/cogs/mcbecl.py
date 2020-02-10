@@ -19,11 +19,11 @@ async def fetch(url):
         assert resp.status == 200
         return await resp.read()
 
-class Mcbecl(commands.Cog):
+class Mcbecl(commands.Cog, name='MCBE Changelog'):
 
     def __init__(self, bot):
         self.bot = bot
-        self.daily.start()
+        # self.daily.start()
 
     def cog_unload():
         self.daily.cancel()
@@ -98,7 +98,8 @@ class Mcbecl(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         # Check for updates on when bot ready
-        await self.check_feedback_site()
+        # await self.check_feedback_site()
+        pass
 
     @commands.command(name='latestmcbe')
     async def latestmcbe(self, ctx):
@@ -121,7 +122,7 @@ class Mcbecl(commands.Cog):
     @commands.group(name='updates')
     @staff_command()
     async def updates(self, ctx):
-        """List/manage the channels where MCBE updates will be posted"""
+        """List the channels where MCBE updates will be posted"""
 
         if ctx.invoked_subcommand is None:
 

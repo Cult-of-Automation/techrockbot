@@ -41,7 +41,10 @@ async def reload(ctx, extension):
 bot.load_extension('tests.cogs.error_handler')
 bot.load_extension('tests.cogs.help')
 bot.load_extension('tests.cogs.guilds')
+
+# TechRock Cogs
 bot.load_extension('tests.cogs.server')
+bot.load_extension('tests.cogs.democracy')
 
 # Feature cogs
 bot.load_extension('tests.cogs.memes')

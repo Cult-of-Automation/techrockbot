@@ -1,5 +1,4 @@
-prefix:
-- "trb "
+prefix: "trb "
 roles:
 group:
     mods:

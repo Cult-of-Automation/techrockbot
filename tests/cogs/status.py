@@ -101,7 +101,7 @@ class Status(commands.Cog):
 
     @commands.group(name='status_alias')
     async def status_alias(self, ctx):
-        """List/manage server aliases for status command"""
+        """List server aliases for status command"""
 
         if ctx.invoked_subcommand is None:
 

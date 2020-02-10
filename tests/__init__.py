@@ -36,7 +36,7 @@ if DEBUG_MODE:
     json_handler.formatter = JsonFormatter()
     logging_handlers.append(json_handler)
 else:
-    logfile = Path(LOG_DIR, 'bot.log')
+    logfile = Path(LOG_DIR, 'tests.log')
     megabyte = 1048576
 
     filehandler = handlers.RotatingFileHandler(logfile, maxBytes=(megabyte*5), backupCount=7)
@@ -63,7 +63,7 @@ for key, value in logging.Logger.manager.loggerDict.items():
     # This happens long before we instantiate our loggers, so
     # those should still have the expected level
 
-    if key == 'bot':
+    if key == 'tests':
         continue
 
     if not isinstance(value, logging.Logger):
@@ -82,6 +82,6 @@ for key, value in logging.Logger.manager.loggerDict.items():
         value.addHandler(handler)
 
 # Silence irrelevant loggers
-logging.getLogger('aio_pika').setLevel(logging.ERROR)
+logging.getLogger('aioftp').setLevel(logging.ERROR)
 logging.getLogger('discord').setLevel(logging.ERROR)
 logging.getLogger('websockets').setLevel(logging.ERROR)

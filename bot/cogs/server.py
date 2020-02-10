@@ -27,13 +27,13 @@ class Server(commands.Cog):
 
     # Temporary TechRock-only check
     async def cog_check(self, ctx):
-        return ctx.guild.id==659832580731961374
+        return ctx.guild.id==403047405877985281
 
     # CMP .mcstructure file upload
     @commands.Cog.listener()
     async def on_message(self, message):
 
-        if message.channel.id != 661372317212868620 or not message.attachments:
+        if message.channel.id != 661730461206183937 or not message.attachments:
             return
 
         # "Loading" reaction

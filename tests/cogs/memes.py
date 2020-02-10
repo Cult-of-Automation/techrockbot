@@ -37,6 +37,6 @@ class Memes(commands.Cog, name='Miscellaneous'):
         """Make TRB say something... unoffensive"""
         await ctx.message.delete()
         await ctx.send(content)
-            
+
 def setup(bot):
     bot.add_cog(Memes(bot))

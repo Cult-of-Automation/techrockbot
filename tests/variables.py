@@ -44,6 +44,5 @@ def _prefix(bot, msg):
     if msg.guild is None:
         base.append('trb ')
     else:
-        for prefix in _get(msg.guild.id, 'prefix'):
-            base.append(prefix)
+        base.append(_get(msg.guild.id, 'prefix'))
     return base

@@ -11,7 +11,7 @@ from tests.utils.checks import mod_command_check
 
 log = logging.getLogger(__name__)
 
-class Guilds(commands.Cog):
+class Guilds(commands.Cog, name='Guild Configuration'):
 
     def __init__(self, bot):
         self.bot = bot
@@ -52,38 +52,16 @@ class Guilds(commands.Cog):
             os.remove(f'configs/{ctx.guild.id}.yml')
         await self.on_guild_join(ctx.guild)
 
-    @commands.group(name = 'prefix')
-    async def _prefix(self, ctx):
-        """List/Manage prefixes for TRB"""
-        prefixes_list = _get(ctx.guild.id, 'prefix')
-        prefixes = '`, `'.join(prefixes_list)
-        await ctx.send(f'`{prefixes}`')
-
-    @_prefix.command(name = 'add')
-    async def _prefix_add(self, ctx, prefix):
-        """Add a prefix for TRB"""
+    @commands.command(name = 'setprefix')
+    async def _set_prefix(self, ctx, prefix: str):
+        """Set prefix for TRB"""
         with GuildConfig(ctx.guild.id) as guildconfig:
-            if prefix in guildconfig['prefix']:
-                await ctx.send(f'`{prefix}` is already a prefix')
-                return
-            guildconfig['prefix'].append(prefix)
-        await ctx.send(f'Added `{prefix}` as a prefix')
-
-    @_prefix.command(name = 'remove')
-    async def _prefix_remove(self, ctx, prefix):
-        """Remove a prefix for TRB"""
-        with GuildConfig(ctx.guild.id) as guildconfig:
-            if prefix not in guildconfig['prefix']:
-                await ctx.send(f'`{prefix}` is not a prefix')
-                return
-            guildconfig['prefix'].remove(prefix)
-            if len(guildconfig['prefix'])==0:
-                await ctx.send('Note: TRB commands can be invoked by mentioning')
-        await ctx.send(f'Removed `{prefix}` as a prefix')
+            guildconfig['prefix'] = prefix
+        await ctx.send(f'Set `{prefix}` as the TRB prefix')
 
     @commands.group(name = 'groups')
     async def groups(self, ctx):
-        """List/manage permission groups for TRB commands"""
+        """List permission groups for TRB commands"""
 
         if ctx.invoked_subcommand is None:
 

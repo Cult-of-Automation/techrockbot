@@ -5,25 +5,24 @@ from tests.variables import _get
 
 class ListenerCooldown(object):
     
-    def __init__(self, gid, cooldown):
-        self.limit = _get(gid, 'cooldown', cooldown)[0]
-        self.duration = _get(gid, 'cooldown', cooldown)[1] * 60
+    def __init__(self, gid, cd_name):
+        self.limit = _get(gid, 'cooldown', cd_name)[1]
+        self.duration = _get(gid, 'cooldown', cd_name)[2] * 60
         self.count = 0
-        self.time = 0
+        self.time = time.time() + self.duration
 
-    def _getRemaining(self):
-        return self.duration - (time.time() - self.time)
+    def __call__(self):
 
-    def _setRemaining(self, value):
-        self.time = time.time() - (self.duration - value)
-
-    remaining = property(_getRemaining, _setRemaining)
-
-    def __get__(self, instance, owner):
-        if self.count==self.limit:
-            return self.remaining
-        else:
+        if time.time() < self.time:
             self.count += 1
+        else:
+            # Reset count
+            self.count = 0
+            self.time = time.time() + self.duration
+
+        if self.count == self.limit:
+            return None
+        elif self.count < self.limit:
             return True
-        if self.remaining <= 0:
-            return True
+        elif self.count > self.limit:
+            return False

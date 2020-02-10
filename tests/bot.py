@@ -1,7 +1,7 @@
 import logging
 from discord.ext import commands
 
-log = logging.getLogger('bot')
+log = logging.getLogger('tests')
 
 class Bot(commands.Bot):
 
