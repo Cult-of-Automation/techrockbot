@@ -15,7 +15,10 @@ bot = Bot(
 bot.load_extension('bot.cogs.error_handler')
 bot.load_extension('bot.cogs.help')
 bot.load_extension('bot.cogs.guilds')
+
+# TechRock Cogs
 bot.load_extension('bot.cogs.server')
+bot.load_extension('bot.cogs.democracy')
 
 # Feature cogs
 bot.load_extension('bot.cogs.memes')
