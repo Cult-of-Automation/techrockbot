@@ -53,10 +53,10 @@ class Ftp:
 
         with io.BytesIO() as file_out:
             # Initialize connection
-            log.info(f'Downloading {name} from {ip}')
+            log.info(f'Downloading {path} from {ip}')
             async with aioftp.ClientSession(ip, pt, un, pw) as client:
                 async with client.download_stream(path) as stream:
                     async for block in stream.iter_by_block(block_size):
                         file_out.write(block)
             file_out.seek(0)
-            return file_out
+            return file_out.read()

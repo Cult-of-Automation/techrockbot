@@ -5,7 +5,7 @@ import logging
 
 from discord.ext import commands
 from bot.utils.ftp import Ftp
-from bot.utils.xbox import Xblapi
+from bot.utils.xbox import getxuid
 from bot.variables import _get
 from bot.constants import Server as ServerConfig
 from bot.decorators import staff_command
@@ -33,7 +33,7 @@ class Server(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
 
-        if message.channel.id != 661730461206183937 or not message.attachments:
+        if message.channel.id != 661372317212868620 or not message.attachments:
             return
 
         # "Loading" reaction
@@ -70,7 +70,7 @@ class Server(commands.Cog):
             message.channel.send(f'```{error_list}```')
 
     # Add user to respected server whitelist
-    @commands.command(name='add_user', hidden=True)
+    @commands.command(name='add_user')
     @staff_command()
     async def add_user(self, ctx, server, user):
 
@@ -90,7 +90,7 @@ class Server(commands.Cog):
             else:
                 raise
             entry['name'] = user
-            entry['xuid'] = await Xblapi.xuid(user)
+            entry['xuid'] = await getxuid(user)
             
             # Fetch permissions.json as list of dicts
             perms_raw = await Ftp._read(self, ServerConfig.ftp[server], userlist_path)
@@ -114,14 +114,16 @@ class Server(commands.Cog):
             raise
 
     # List users in whitelist
-    @commands.command(name='userlist', hidden=True)
+    @commands.command(name='userlist')
     @staff_command()
     async def userlist(self, ctx, server='cmp'):
 
         try:
-            path = ServerConfig.ftp[server]['userlist']
-            with await Ftp._read(self, ServerConfig.ftp[server], path) as f:
-                perms = json.loads(f)
+            userlist_path = ServerConfig.ftp[server]['userlist']
+
+            perms_raw = await Ftp._read(self, ServerConfig.ftp[server], userlist_path)
+            perms = json.loads(perms_raw)
+
             names = []
             for item in perms:
                 names.append(item['name'])
