@@ -1,3 +1,5 @@
+# Original from Python Discord Bot
+# https://github.com/python-discord/bot
 import asyncio
 import itertools
 from collections import namedtuple
@@ -9,6 +11,7 @@ from discord.ext import commands
 from discord.ext.commands import CheckFailure, Cog as DiscordCog, Command, Context
 from fuzzywuzzy import fuzz, process
 
+from tests.constants import Icons
 from tests.variables import _get 
 from tests.bot import Bot
 from tests.pagination import (
@@ -413,7 +416,7 @@ class HelpSession:
         else:
             title = self.title
 
-        embed.set_author(name=title, icon_url='https://cdn.discordapp.com/emojis/649191388965109791.png')
+        embed.set_author(name=title, icon_url=Icons.techrock)
         embed.description = self._pages[page_number]
 
         # add page counter to footer if paginating

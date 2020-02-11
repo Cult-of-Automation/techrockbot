@@ -1,3 +1,5 @@
+# Original from Python Discord Bot
+# https://github.com/python-discord/bot
 import logging
 
 from discord.ext.commands import (
@@ -14,6 +16,8 @@ from discord.ext.commands import (
     UserInputError,
 )
 from discord.ext.commands import Cog, Context
+
+from tests.constants import Emojis
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +49,7 @@ class ErrorHandler(Cog):
 
         # Try to look for a tag with the command's name if the command isn't found.
         if isinstance(e, CommandNotFound) and not hasattr(ctx, "invoked_from_error_handler"):
-            await ctx.message.add_reaction('\U0001F914')
+            await ctx.message.add_reaction(Emojis.thinking)
 
         elif isinstance(e, BadArgument):
             await ctx.send(f"Bad argument: {e}\n")

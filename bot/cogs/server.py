@@ -12,7 +12,13 @@ from bot.decorators import staff_command
 
 log = logging.getLogger(__name__)
 
-emote = ['\U00002705', '\U0000274C', '\U000026A0', '\U0001F504']
+emote = [
+    Emojis.okay,
+    Emojis.error,
+    Emojis.warning,
+    Emojis.loading
+]
+
 errors = [
     '           Okay',
     'Transfer Failed',

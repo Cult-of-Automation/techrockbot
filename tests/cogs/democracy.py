@@ -6,6 +6,9 @@ import io
 from datetime import datetime, timedelta
 from discord import Embed
 from discord.ext import tasks, commands
+from discord.utils import sleep_until
+
+from tests.constants import Colours, Emojis
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +40,7 @@ class Democracy(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.dailyapp.start()
+        #self.dailyapp.start()
 
     def cog_unload():
         self.dailyapp.cancel()
@@ -64,7 +67,7 @@ class Democracy(commands.Cog):
 
             app = list(new_app.values())
 
-            app_embed = Embed(colour=0x4b4740)
+            app_embed = Embed(colour=Colours.techrock)
 
             # Get user
             try:
@@ -73,13 +76,13 @@ class Democracy(commands.Cog):
             except:
                 app_embed.set_author(name='CMP Application')
 
-            app_embed.add_field(name = 'Discord Username', value = app[2])
-            app_embed.add_field(name = 'GamerTag', value = app[3])
-            app_embed.add_field(name = 'Age', value = app[4])
-            app_embed.add_field(name = 'Technical Niches', value = app[5])
-            app_embed.add_field(name = 'Minecraft Experience', value = app[7], inline=False)
-            app_embed.add_field(name = 'Social Media', value = app[8])
-            app_embed.add_field(name = 'Links', value = app[9])
+            app_embed.add_field(name = 'Discord Username',      value = app[2])
+            app_embed.add_field(name = 'GamerTag',              value = app[3])
+            app_embed.add_field(name = 'Age',                   value = app[4])
+            app_embed.add_field(name = 'Technical Niches',      value = app[5])
+            app_embed.add_field(name = 'Minecraft Experience',  value = app[7], inline=False)
+            app_embed.add_field(name = 'Social Media',          value = app[8])
+            app_embed.add_field(name = 'Links',                 value = app[9])
 
             # Split uploads into hyperlinks
             if app[6]:
@@ -90,11 +93,11 @@ class Democracy(commands.Cog):
             else:
                 media_links = 'None'
 
-            app_embed.add_field(name = 'Pictures/Videos', value = media_links)
+            app_embed.add_field(name = 'Pictures/Videos',       value = media_links)
 
             msg = await app_channel.send(embed=app_embed)
-            await msg.add_reaction('\U0001F44D')
-            await msg.add_reaction('\U0001F44E')
+            await msg.add_reaction(Emojis.thumbs_up)
+            await msg.add_reaction(Emojis.thumbs_down)
 
 
     @commands.Cog.listener()
@@ -105,8 +108,7 @@ class Democracy(commands.Cog):
 
     @tasks.loop(hours=24)
     async def dailyapp(self):
-        #await self.post_new_apps()
-        pass
+        await self.post_new_apps()
 
     @dailyapp.before_loop
     async def before_dailyapp(self):
@@ -115,7 +117,7 @@ class Democracy(commands.Cog):
         midnight_next = tea_today if datetime.utcnow().hour < 0 else midnight_today + timedelta(1)
         # Sync daily check to T00:00Z
         log.info(f'Application loop will begin at {midnight_next}')
-        await discord.utils.sleep_until(midnight_next)
+        await sleep_until(midnight_next)
 
 def setup(bot):
     bot.add_cog(Democracy(bot))

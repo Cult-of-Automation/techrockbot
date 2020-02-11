@@ -9,6 +9,7 @@ from lxml import html
 from typing import Optional
 from datetime import datetime, timedelta
 
+from bot.constants import Colours, Icons
 from bot.variables import GuildConfig, _get
 from bot.decorators import staff_command
 
@@ -19,7 +20,7 @@ async def fetch(url):
         assert resp.status == 200
         return await resp.read()
 
-class Mcbecl(commands.Cog):
+class Mcbecl(commands.Cog, name='MCBE Changelog'):
 
     def __init__(self, bot):
         self.bot = bot
@@ -87,7 +88,7 @@ class Mcbecl(commands.Cog):
     async def new_update(self, branch, version, link):
         log.info(f'Posting new {branch} changelog')
         # Get update channel id for update branch from all guild configs
-        channels = [_get(guild.id, 'mcbecl', branch.lower()) for guild in self.bot.guilds]
+        channels = [_get(guild.id, 'updates', branch.lower()) for guild in self.bot.guilds]
         # Post to all channels
         for channel_id in channels:
             if channel_id is None:
@@ -98,7 +99,8 @@ class Mcbecl(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         # Check for updates on when bot ready
-        await self.check_feedback_site()
+        # await self.check_feedback_site()
+        pass
 
     @commands.command(name='latestmcbe')
     async def latestmcbe(self, ctx):
@@ -121,14 +123,16 @@ class Mcbecl(commands.Cog):
     @commands.group(name='updates')
     @staff_command()
     async def updates(self, ctx):
-        """List/manage the channels where MCBE updates will be posted"""
+        """List the channels where MCBE updates will be posted"""
 
         if ctx.invoked_subcommand is None:
 
             # Get guild's update channel dictionary
             channels = _get(ctx.guild.id, 'updates')
 
-            guild_updates = discord.Embed(colour=0x4b4740, title = f'{ctx.guild.name} Update Channels')
+            title = f'{ctx.guild.name} Update Channels'
+            guild_updates = discord.Embed(colour=Colours.techrock)
+            guild_updates.set_author(name=title, icon_url=Icons.techrock)
             # Loop though update channel dictionary
             for branch in channels:
                 channel_id = channels[branch]

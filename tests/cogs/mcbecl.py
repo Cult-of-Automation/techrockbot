@@ -9,6 +9,7 @@ from lxml import html
 from typing import Optional
 from datetime import datetime, timedelta
 
+from tests.constants import Colours, Icons
 from tests.variables import GuildConfig, _get
 from tests.decorators import staff_command
 
@@ -87,7 +88,7 @@ class Mcbecl(commands.Cog, name='MCBE Changelog'):
     async def new_update(self, branch, version, link):
         log.info(f'Posting new {branch} changelog')
         # Get update channel id for update branch from all guild configs
-        channels = [_get(guild.id, 'mcbecl', branch.lower()) for guild in self.bot.guilds]
+        channels = [_get(guild.id, 'updates', branch.lower()) for guild in self.bot.guilds]
         # Post to all channels
         for channel_id in channels:
             if channel_id is None:
@@ -129,7 +130,9 @@ class Mcbecl(commands.Cog, name='MCBE Changelog'):
             # Get guild's update channel dictionary
             channels = _get(ctx.guild.id, 'updates')
 
-            guild_updates = discord.Embed(colour=0x4b4740, title = f'{ctx.guild.name} Update Channels')
+            title = f'{ctx.guild.name} Update Channels'
+            guild_updates = discord.Embed(colour=Colours.techrock)
+            guild_updates.set_author(name=title, icon_url=Icons.techrock)
             # Loop though update channel dictionary
             for branch in channels:
                 channel_id = channels[branch]

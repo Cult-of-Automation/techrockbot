@@ -51,10 +51,10 @@ def _join_var_constructor(loader, node):
     fields = loader.construct_sequence(node)
     return "".join(str(x) for x in fields)
 
-yaml.SafeLoader.add_constructor("!ENV", _env_var_constructor)
-yaml.SafeLoader.add_constructor("!JOIN", _join_var_constructor)
+yaml.SafeLoader.add_constructor('!ENV', _env_var_constructor)
+yaml.SafeLoader.add_constructor('!JOIN', _join_var_constructor)
 
-with open("config.yml", encoding="UTF-8") as f:
+with open('config.yml', encoding="UTF-8") as f:
     _CONFIG_YAML = yaml.safe_load(f)
 
 def check_required_keys(keys):
@@ -106,12 +106,43 @@ class YAMLGetter(type):
 
 # Dataclasses
 class Bot(metaclass=YAMLGetter):
-    section = "bot"
+    section = 'bot'
 
     token: str
     test_token: str
 
+class Colours(metaclass=YAMLGetter):
+    section = 'style'
+    subsection = 'colours'
+
+    techrock: int
+
+class Emojis(metaclass=YAMLGetter):
+    section = 'style'
+    subsection = 'emojis'
+
+    thinking: str
+
+    thumbs_up: str
+    thumbs_down: str
+
+    okay: str
+    error: str
+    warning: str
+    loading: str
+
+    circle_red: str
+    circle_green: str
+    circle_blue: str
+
+class Icons(metaclass=YAMLGetter):
+    section = 'style'
+    subsection = 'icons'
+
+    techrock: str
+    techrock_square: str
+
 class Server(metaclass=YAMLGetter):
-    section = "server"
+    section = 'server'
 
     ftp: Dict[str, Dict[str, str]]

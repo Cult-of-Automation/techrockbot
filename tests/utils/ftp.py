@@ -26,7 +26,7 @@ class Ftp:
                 if not overwrite:
                     log.warning(f'{path}{name} already exists')
                     return 2
-                log.info('Overwriting {path}{name}')
+                log.info(f'Overwriting {path}{name}')
                 await client.remove_file(name)
             
             # Send file

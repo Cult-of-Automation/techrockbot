@@ -3,6 +3,7 @@ import re
 from discord.ext import commands
 
 from tests.decorators import mod_command, staff_command
+from tests.constants import Emojis
 from tests.variables import GuildConfig, _get
 
 class Memes(commands.Cog, name='Miscellaneous'):
@@ -20,7 +21,7 @@ class Memes(commands.Cog, name='Miscellaneous'):
     @commands.command(name='alive')
     async def alive(self, ctx):
         """Check if TRB is alive"""
-        await ctx.message.add_reaction('\U0001F44D')
+        await ctx.message.add_reaction(Emojis.thumbs_up)
 
     @commands.command(name='toggle_memes')
     @staff_command()

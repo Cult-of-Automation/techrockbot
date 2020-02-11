@@ -7,12 +7,18 @@ from discord.ext import commands
 from tests.utils.ftp import Ftp
 from tests.utils.xbox import getxuid
 from tests.variables import _get
-from tests.constants import Server as ServerConfig
+from tests.constants import Emojis, Server as ServerConfig
 from tests.decorators import staff_command
 
 log = logging.getLogger(__name__)
 
-emote = ['\U00002705', '\U0000274C', '\U000026A0', '\U0001F504']
+emote = [
+    Emojis.okay,
+    Emojis.error,
+    Emojis.warning,
+    Emojis.loading
+]
+
 errors = [
     '           Okay',
     'Transfer Failed',

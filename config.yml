@@ -1,45 +1,34 @@
 bot:
+
     token:                          !ENV "BOT_TOKEN"
     test_token:                     !ENV "TEST_TOKEN"
 
-guild:
-    
-    id:                             403047405877985281
-    
-    categories:
+style:
 
-        information:                455828584053866497
-        chat:                       609926152731099145
-        be_discussion:              403047405877985282
-        cmp:                        629405848954732594
-        smp:                        403103689356869634
-        projects:                   645940131156459530
-        staff:                      455833458439225347
-        voice:                      403047405877985284
+    colours:
 
-    roles:
+        techrock:                   0x4b4740
 
-        admin:      &ADMIN_ROLE     403101940034306048
-        moderator:  &MOD_ROLE       455833793199079434
-        helper:     &HELPER_ROLE    603138681280135178
-        smp:        &MEMBER_ROLE    403102052894638081
-        cmp:                        623741560839864325
-        trusted:    &TRUSTED_ROLE   403105260627034113
-        mojang:                     646209238464462860
-        everyone:                   403047405877985281
-        muted:      &MUTED_ROLE     627614515483115527
-        warned:     &WARNED_ROLE    617571086326038528
+    emojis:
 
-status:
+        thinking:                   '\U0001F914'
 
-    # Default server/alias to ping on blank status command
-    # "all" will ping all aliases
-    default:    "all"
+        thumbs_up:                  '\U0001F44D'
+        thumbs_down:                '\U0001F44E'
 
-    aliases:
+        okay:                       '\U00002705'
+        error:                      '\U0000274C'
+        warning:                    '\U000026A0'
+        loading:                    '\U0001F504'
 
-        smp:                        "survival.techrock.org:19132"
-        cmp:                        "creative.techrock.org:19132"
+        circle_red:                 '\U0001F534'
+        circle_green:               '\U0001F7E2'
+        circle_blue:                '\U0001F535'
+
+    icons:
+
+        techrock:                   'https://cdn.discordapp.com/emojis/649191388965109791.png'
+        techrock_square:            'https://cdn.discordapp.com/icons/403047405877985281/50e34e698a262d69e322383b5315cd5a.png'
 
 server:
 
@@ -65,4 +54,4 @@ server:
 
 config:
 
-    required_keys: ['bot.token']
+    required_keys:                  ['bot.token']

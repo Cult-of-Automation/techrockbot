@@ -50,5 +50,6 @@ bot.load_extension('tests.cogs.democracy')
 bot.load_extension('tests.cogs.memes')
 bot.load_extension('tests.cogs.status')
 bot.load_extension('tests.cogs.mcbecl')
+bot.load_extension('tests.cogs.embeder')
 
 bot.run(BotConfig.test_token)

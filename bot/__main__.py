@@ -24,5 +24,6 @@ bot.load_extension('bot.cogs.democracy')
 bot.load_extension('bot.cogs.memes')
 bot.load_extension('bot.cogs.status')
 bot.load_extension('bot.cogs.mcbecl')
+bot.load_extension('bot.cogs.embeder')
 
 bot.run(BotConfig.token)
