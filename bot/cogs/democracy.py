@@ -13,10 +13,9 @@ from bot.constants import Colours, Emojis
 log = logging.getLogger(__name__)
 
 async def fetch(url):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            assert resp.status == 200
-            return await resp.text()
+    async with aiohttp.request('GET', url) as resp:
+        assert resp.status == 200
+        return await resp.text()
 
 async def get_applications(url):
 

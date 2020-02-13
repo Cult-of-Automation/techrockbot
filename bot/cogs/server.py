@@ -7,7 +7,7 @@ from discord.ext import commands
 from bot.utils.ftp import Ftp
 from bot.utils.xbox import getxuid
 from bot.variables import _get
-from bot.constants import Server as ServerConfig
+from bot.constants import Emojis, Server as ServerConfig
 from bot.decorators import staff_command
 
 log = logging.getLogger(__name__)

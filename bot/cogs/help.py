@@ -9,7 +9,6 @@ from typing import Union
 from discord import Colour, Embed, HTTPException, Message, Reaction, User
 from discord.ext import commands
 from discord.ext.commands import CheckFailure, Cog as DiscordCog, Command, Context
-from fuzzywuzzy import fuzz, process
 
 from bot.constants import Icons
 from bot.variables import _get 
@@ -34,16 +33,10 @@ Cog = namedtuple('Cog', ['name', 'description', 'commands'])
 class HelpQueryNotFound(ValueError):
     """
     Raised when a HelpSession Query doesn't match a command or cog.
-
-    Contains the custom attribute of ``possible_matches``.
-
-    Instances of this object contain a dictionary of any command(s) that were close to matching the
-    query, where keys are the possible matched command names and values are the likeness match scores.
     """
 
-    def __init__(self, arg: str, possible_matches: dict = None):
+    def __init__(self, arg: str):
         super().__init__(arg)
-        self.possible_matches = possible_matches
 
 
 class HelpSession:
@@ -146,15 +139,8 @@ class HelpSession:
     def _handle_not_found(self, query: str) -> None:
         """
         Handles when a query does not match a valid command or cog.
-
-        Will pass on possible close matches along with the `HelpQueryNotFound` exception.
         """
-        # Combine command and cog names
-        choices = list(self._bot.all_commands) + list(self._bot.cogs)
-
-        result = process.extractBests(query, choices, scorer=fuzz.ratio, score_cutoff=90)
-
-        raise HelpQueryNotFound(f'Query "{query}" not found.', dict(result))
+        raise HelpQueryNotFound(f'Query "{query}" not found.')
 
     async def timeout(self, seconds: int = 30) -> None:
         """Waits for a set number of seconds, then stops the help session."""
@@ -515,10 +501,6 @@ class Help(DiscordCog):
             embed = Embed()
             embed.colour = Colour.red()
             embed.title = str(error)
-
-            if error.possible_matches:
-                matches = '\n'.join(error.possible_matches.keys())
-                embed.description = f'**Did you mean:**\n`{matches}`'
 
             await ctx.send(embed=embed)
 
