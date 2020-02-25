@@ -1,7 +1,6 @@
 bot:
 
     token:                          !ENV "BOT_TOKEN"
-    test_token:                     !ENV "TEST_TOKEN"
 
 style:
 
@@ -11,19 +10,19 @@ style:
 
     emojis:
 
-        thinking:                   '\U0001F914'
+        thinking:                   "\U0001F914"
 
-        thumbs_up:                  '\U0001F44D'
-        thumbs_down:                '\U0001F44E'
+        thumbs_up:                  "\U0001F44D"
+        thumbs_down:                "\U0001F44E"
 
-        okay:                       '\U00002705'
-        error:                      '\U0000274C'
-        warning:                    '\U000026A0'
-        loading:                    '\U0001F504'
+        okay:                       "\U00002705"
+        error:                      "\U0000274C"
+        warning:                    "\U000026A0"
+        loading:                    "\U0001F504"
 
-        circle_red:                 '\U0001F534'
-        circle_green:               '\U0001F7E2'
-        circle_blue:                '\U0001F535'
+        circle_red:                 "\U0001F534"
+        circle_green:               "\U0001F7E2"
+        circle_blue:                "\U0001F535"
 
     icons:
 

@@ -123,7 +123,7 @@ class Mcbecl(commands.Cog, name='MCBE Changelog'):
                 if channel_id is None:
                     continue
                 channel = self.bot.get_channel(channel_id)
-                channel.send(payload)
+                await channel.send(payload)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -247,7 +247,7 @@ class Mcbecl(commands.Cog, name='MCBE Changelog'):
 
     @tasks.loop(minutes=30, count=10)
     async def bihourly(self):
-        log_msg = 'Check ' + self.bihourly.current_loop
+        log_msg = 'Check ' + str(self.bihourly.current_loop)
         updates = await get_new_updates(log_msg)
         if updates:
             await self.post_updates(updates)

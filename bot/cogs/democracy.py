@@ -4,11 +4,11 @@ import csv
 import io
 
 from datetime import datetime, timedelta
-from discord import Embed
+from discord import Embed, Member
 from discord.ext import tasks, commands
 from discord.utils import sleep_until
 
-from bot.constants import Colours, Emojis
+from bot.constants import Colours, Emojis, Icons
 
 log = logging.getLogger(__name__)
 
@@ -61,10 +61,10 @@ class Democracy(commands.Cog):
         cid = 676429957827788800
         app_channel = self.bot.get_channel(cid)
         userconverter = commands.UserConverter()
-        
+
         for new_app in new_apps:
 
-            app = list(new_app.values())
+            app = ['None' if value=='' else str(value) for value in new_app.values()]
 
             app_embed = Embed(colour=Colours.techrock)
 
@@ -84,19 +84,50 @@ class Democracy(commands.Cog):
             app_embed.add_field(name = 'Links',                 value = app[9])
 
             # Split uploads into hyperlinks
-            if app[6]:
+            if app[6]=='None':
+                media_links = 'None'
+            else:
                 media_links = ''
                 media_links_list = app[6].split(', ')
                 for i, link in enumerate(media_links_list, 1):
                     media_links += f'[{i}]({link}) '
-            else:
-                media_links = 'None'
 
             app_embed.add_field(name = 'Pictures/Videos',       value = media_links)
 
             msg = await app_channel.send(embed=app_embed)
             await msg.add_reaction(Emojis.thumbs_up)
             await msg.add_reaction(Emojis.thumbs_down)
+
+    @commands.command(name='nominate')
+    @commands.has_role('Member')
+    async def nominate(self, ctx, nominee: Member):
+
+        await ctx.message.delete()
+
+        cid = 676429957827788800
+        app_channel = self.bot.get_channel(cid)
+
+        datefmt = '%Y %b %d'
+        join_date = nominee.joined_at.strftime(datefmt)
+        regi_date = nominee.created_at.strftime(datefmt)
+        
+        midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        midnight_next = tea_today if datetime.utcnow().hour < 0 else midnight_today + timedelta(1)
+        count_datetime = midnight_next + timedelta(3)
+        
+        footer_text = 'Votes will be counted on ' + count_datetime.isoformat() + 'Z\n3/4 Qualified Majority Needed'
+
+        nomination = Embed(colour=Colours.techrock)
+        nomination.set_author(name='Trusted Role Nomination', icon_url = nominee.avatar_url)
+        nomination.add_field(name = 'Nominee',      value = nominee.display_name, inline=False)
+        nomination.add_field(name = 'Joined',       value = join_date)
+        nomination.add_field(name = 'Registered',   value = regi_date)
+        nomination.set_footer(text = footer_text, icon_url = Icons.techrock)
+        
+        msg = await app_channel.send(embed=nomination)
+        await msg.add_reaction(Emojis.thumbs_up)
+        await msg.add_reaction(Emojis.thumbs_down)
+
 
 
     @commands.Cog.listener()
