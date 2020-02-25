@@ -1,5 +1,4 @@
 import logging
-import aiohttp
 import pickle
 
 from lxml import html
@@ -12,29 +11,25 @@ from discord.utils import sleep_until
 from bot.constants import Colours, Icons
 from bot.variables import GuildConfig, _get
 from bot.decorators import staff_command
+from bot.utils.requests import fetch_text
 
 log = logging.getLogger(__name__)
 
-async def fetch(url):
-    async with aiohttp.request('GET', url) as resp:
-        assert resp.status == 200
-        return await resp.text()
-
 async def get_changelogs():
-
+    """Get latest changelogs from feedback site"""
     base_url = 'https://feedback.minecraft.net'
     checklist = [
         {
             '_branch': 'release',
             '_suburl': '/hc/en-us/sections/360001186971',
             'keyword': 'Bedrock',
-            'trimnum': [12, -10]
+            'trimnum': (12, -10)
         },
         {
             '_branch': 'beta',
             '_suburl': '/hc/en-us/sections/360001185332',
             'keyword': 'Android',
-            'trimnum': [17, -31]
+            'trimnum': (17, -31)
         }
     ]
 
@@ -43,7 +38,7 @@ async def get_changelogs():
 
         # Get list of changelogs from site
         furl = base_url + branch['_suburl']
-        tree = html.fromstring(await fetch(furl))
+        tree = html.fromstring(await fetch_text(furl))
         vers = tree.find_class('article-list-link')
 
         # Check if list successfully obtained
@@ -63,7 +58,8 @@ async def get_changelogs():
         branch_dict = {branch_name: {}}
 
         # Trim and add values
-        text_trimmed = text[branch['trimnum'][0]:branch['trimnum'][1]]
+        trim_in, trim_out = branch['trimnum']
+        text_trimmed = text[trim_in:trim_out]
         suburl_trimmed = suburl[0:31]
         branch_dict[branch_name]['version'] = text_trimmed
         branch_dict[branch_name]['link'] = base_url + suburl_trimmed
@@ -71,42 +67,81 @@ async def get_changelogs():
 
     return changelogs
 
-async def get_new_updates(log_msg='Not Stated'):
-
-    log.info(f'Checking for new updates... {log_msg}')
-    changelogs = await get_changelogs()
-
-    # Open cache and update if changed
-    with open('mcbecl.pickle', 'r+b') as f:
-        cache = pickle.load(f)
-        # Cache is up to date
-        if changelogs==cache:
-            return
-        f.seek(0)
-        pickle.dump(changelogs, f)
-
-    updates = {}
-    for branch in changelogs:
-        if changelogs[branch] != cache[branch]:
-            update = 'Minecraft Bedrock '
-            update += branch.capitalize()
-            update += ' '
-            update += changelogs[branch]['version']
-            update += ' Changelog:\n'
-            update += changelogs[branch]['link']
-            updates.update({branch: update})
-
-    return updates
-
 class Mcbecl(commands.Cog, name='MCBE Changelog'):
 
     def __init__(self, bot):
         self.bot = bot
-        self.dailyups.start()
+        with open('.pickle', 'rb') as f:
+            self.cache = pickle.load(f)['mcbecl']
+        # self.dailyups.start()
 
     def cog_unload():
-        self.dailyups.cancel()
-        self.bihourly.cancel()
+        # self.dailyups.cancel()
+        # self.bihourly.cancel()
+        pass
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        # Check for updates on when bot ready
+        # updates = await self.get_new_updates('Initialization')
+        # if updates:
+        #     await self.post_updates(updates)
+        pass
+
+    @tasks.loop(hours=24)
+    async def dailyups(self):
+        log.info('Feedback site daily check started')
+        self.bihourly.start()
+
+    @dailyups.before_loop
+    async def before_daily(self):
+        # Gets next T15:00Z
+        tea_today = datetime.utcnow().replace(hour=15, minute=0, second=0, microsecond=0)
+        tea_next = tea_today if datetime.utcnow().hour < 15 else tea_today + timedelta(1)
+        # Sync daily check to T15:00Z
+        log.info(f'Bihourly loop will begin at {tea_next}')
+        await sleep_until(tea_next)
+
+    @tasks.loop(minutes=30, count=10)
+    async def bihourly(self):
+        log_msg = 'Check ' + str(self.bihourly.current_loop)
+        updates = await self.get_new_updates(log_msg)
+        if updates:
+            await self.post_updates(updates)
+
+    async def get_new_updates(self, log_msg='Not Stated'):
+    
+        log.info(f'Checking for new updates... {log_msg}')
+        changelogs = await get_changelogs()
+
+        # Cache is up to date
+        if self.cache==changelogs:
+            return
+
+        # Compile post payloads for changelog branch if new
+        updates = {}
+        for branch in changelogs:
+            if changelogs[branch] != self.cache[branch]:
+                update = 'Minecraft Bedrock '
+                update += branch.capitalize()
+                update += ' '
+                update += changelogs[branch]['version']
+                update += ' Changelog:\n'
+                update += changelogs[branch]['link']
+                updates.update({branch: update})
+
+        # Update pickle
+        with open('.pickle', 'r+b') as f:
+            _pickle = pickle.load(f)
+            _pickle.update({'mcbecl': changelogs})
+            f.seek(0)
+            pickle.dump(_pickle, f)
+            f.truncate()
+
+        # Update cache
+        self.cache = changelogs
+    
+        return updates
 
     async def post_updates(self, updates):
 
@@ -123,32 +158,21 @@ class Mcbecl(commands.Cog, name='MCBE Changelog'):
                 if channel_id is None:
                     continue
                 channel = self.bot.get_channel(channel_id)
-                await channel.send(payload)
+                print(payload)
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        # Check for updates on when bot ready
-        updates = await get_new_updates('Initialization')
+    @commands.command(name='mcbecl_check')
+    @commands.is_owner()
+    async def mcbecl_check(self, ctx):
+        updates = await self.get_new_updates('Manual')
         if updates:
             await self.post_updates(updates)
 
-    @commands.command(name='latestmcbe')
-    async def latestmcbe(self, ctx):
-        """Link the latest release changelog for MCBE"""
-        with open('mcbecl.pickle', 'rb') as f:
-            cache = pickle.load(f)
-        release_version = cache['release']['version']
-        release_link = cache['release']['link']
-        await ctx.send(f'Minecraft Bedrock {release_version} Changelog:\n{release_link}')
-
-    @commands.command(name='latestbeta')
-    async def latestbeta(self, ctx):
-        """Link the latest beta changelog for MCBE"""
-        with open('mcbecl.pickle', 'rb') as f:
-            cache = pickle.load(f)
-        beta_version = cache['beta']['version']
-        beta_link = cache['beta']['link']
-        await ctx.send(f'Minecraft Bedrock BETA {beta_version} Changelog:\n{beta_link}')
+    @commands.command(name='latest')
+    async def latest(self, ctx, branch='release'):
+        """Get link for the latest changelog"""
+        vers = self.cache[branch]['version']
+        link = self.cache[branch]['link']
+        await ctx.send(f'Minecraft Bedrock {vers} Changelog:\n{link}')
 
     @commands.group(name='updates')
     @staff_command()
@@ -230,27 +254,6 @@ class Mcbecl(commands.Cog, name='MCBE Changelog'):
                 guildconfig['updates'][_branch] = None
 
         await ctx.send(f'Disabled receiving {branch} updates')
-
-    @tasks.loop(hours=24)
-    async def dailyups(self):
-        log.info('Feedback site daily check started')
-        self.bihourly.start()
-
-    @dailyups.before_loop
-    async def before_daily(self):
-        # Gets next T15:00Z
-        tea_today = datetime.utcnow().replace(hour=15, minute=0, second=0, microsecond=0)
-        tea_next = tea_today if datetime.utcnow().hour < 15 else tea_today + timedelta(1)
-        # Sync daily check to T15:00Z
-        log.info(f'Bihourly loop will begin at {tea_next}')
-        await sleep_until(tea_next)
-
-    @tasks.loop(minutes=30, count=10)
-    async def bihourly(self):
-        log_msg = 'Check ' + str(self.bihourly.current_loop)
-        updates = await get_new_updates(log_msg)
-        if updates:
-            await self.post_updates(updates)
 
 def setup(bot):
     bot.add_cog(Mcbecl(bot))

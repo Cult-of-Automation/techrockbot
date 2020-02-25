@@ -3,7 +3,7 @@ import os
 import sys
 from logging import Logger, StreamHandler, handlers
 from pathlib import Path
-from logmatic import JsonFormatter
+# from logmatic import JsonFormatter
 
 logging.TRACE = 5
 logging.addLevelName(logging.TRACE, 'TRACE')
@@ -49,9 +49,9 @@ else:
     fmt_handler = logging.StreamHandler()
     fmt_handler.formatter = logging.Formatter('%(asctime)s Bot: | %(name)33s | %(levelname)8s | %(message)s')
     logging_handlers.append(fmt_handler)
-
+    
 logging.basicConfig(
-    datefmt="%b %d %H:%M:%S",
+    datefmt='%b %d %H:%M:%S',
     level=logging.TRACE if DEBUG_MODE else logging.INFO,
     handlers=logging_handlers
 )
@@ -82,7 +82,6 @@ for key, value in logging.Logger.manager.loggerDict.items():
         value.addHandler(handler)
 
 # Silence irrelevant loggers
-logging.getLogger('aio_pika').setLevel(logging.ERROR)
 logging.getLogger('aioftp').setLevel(logging.ERROR)
 logging.getLogger('discord').setLevel(logging.ERROR)
 logging.getLogger('websockets').setLevel(logging.ERROR)

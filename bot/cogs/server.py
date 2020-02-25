@@ -4,11 +4,10 @@ import json
 import logging
 
 from discord.ext import commands
-from bot.utils.ftp import Ftp
-from bot.utils.xbox import getxuid
 from bot.variables import _get
 from bot.constants import Emojis, Server as ServerConfig
 from bot.decorators import staff_command
+from bot.utils.requests import fetch_xuid, ftp_write, ftp_read
 
 log = logging.getLogger(__name__)
 
@@ -33,13 +32,13 @@ class Server(commands.Cog):
 
     # Temporary TechRock-only check
     async def cog_check(self, ctx):
-        return ctx.guild.id==403047405877985281
+        return ctx.guild.id==659832580731961374
 
     # CMP .mcstructure file upload
     @commands.Cog.listener()
     async def on_message(self, message):
 
-        if message.channel.id != 661730461206183937 or not message.attachments:
+        if message.channel.id != 661372317212868620 or not message.attachments:
             return
 
         # "Loading" reaction
@@ -60,7 +59,7 @@ class Server(commands.Cog):
                 # Retrieve attachment
                 await attachment.save(file_in)
                 # Upload .mcstructure file
-                result = await Ftp._write(self, ServerConfig.ftp['cmp'], file_name, file_size, file_in, path)
+                result = await ftp_write(ServerConfig.ftp['cmp'], file_name, file_size, file_in, path)
 
             filelog.append(f'{errors[result]} | {file_name}')
             if errno < result:
@@ -96,10 +95,10 @@ class Server(commands.Cog):
             else:
                 raise
             entry['name'] = user
-            entry['xuid'] = await getxuid(user)
+            entry['xuid'] = await fetch_xuid(user)
             
             # Fetch permissions.json as list of dicts
-            perms_raw = await Ftp._read(self, ServerConfig.ftp[server], userlist_path)
+            perms_raw = await ftp__read(self, ServerConfig.ftp[server], userlist_path)
             perms = json.loads(perms_raw)
             
             perms.append(entry)
@@ -107,7 +106,7 @@ class Server(commands.Cog):
             # Dump list to JSON and upload
             with io.BytesIO() as output:
                 size = output.write(json.dumps(perms, indent=4).encode('utf-8'))
-                result = await Ftp._write(self, ServerConfig.ftp[server], userlist_path, size, output, '/', True)
+                result = await ftp__write(ServerConfig.ftp[server], userlist_path, size, output, '/', True)
 
             # Replace reaction with results
             await ctx.message.clear_reactions()
@@ -127,7 +126,7 @@ class Server(commands.Cog):
         try:
             userlist_path = ServerConfig.ftp[server]['userlist']
 
-            perms_raw = await Ftp._read(self, ServerConfig.ftp[server], userlist_path)
+            perms_raw = await ftp__read(ServerConfig.ftp[server], userlist_path)
             perms = json.loads(perms_raw)
 
             names = []

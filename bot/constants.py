@@ -76,12 +76,12 @@ def check_required_keys(keys):
             )
             raise
 
-try:
-    required_keys = _CONFIG_YAML['config']['required_keys']
-except KeyError:
-    pass
-else:
-    check_required_keys(required_keys)
+# try:
+#     required_keys = _CONFIG_YAML['config']['required_keys']
+# except KeyError:
+#     pass
+# else:
+#     check_required_keys(required_keys)
 
 class YAMLGetter(type):
     subsection = None
@@ -109,7 +109,6 @@ class Bot(metaclass=YAMLGetter):
     section = 'bot'
 
     token: str
-    test_token: str
 
 class Colours(metaclass=YAMLGetter):
     section = 'style'

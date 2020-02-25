@@ -11,7 +11,7 @@ from bot.utils.checks import mod_command_check
 
 log = logging.getLogger(__name__)
 
-class Guilds(commands.Cog):
+class Guilds(commands.Cog, name='Guild Configuration'):
 
     def __init__(self, bot):
         self.bot = bot
@@ -61,7 +61,7 @@ class Guilds(commands.Cog):
 
     @commands.group(name = 'groups')
     async def groups(self, ctx):
-        """List/manage permission groups for TRB commands"""
+        """List permission groups for TRB commands"""
 
         if ctx.invoked_subcommand is None:
 
