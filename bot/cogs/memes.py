@@ -1,10 +1,12 @@
-import discord
 import re
 from discord.ext import commands
 
 from bot.decorators import mod_command, staff_command
 from bot.constants import Emojis
-from bot.variables import GuildConfig, _get
+from bot.variables import _get
+from bot.utils.cooldown import TriCooldown
+
+cd_memes = TriCooldown('memes')
 
 class Memes(commands.Cog, name='Miscellaneous'):
 
@@ -13,24 +15,17 @@ class Memes(commands.Cog, name='Miscellaneous'):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if _get(message.guild.id, 'toggle', 'memes') is False:
-            return
-        if re.search(" do(es)? ?n'?o?t work", message.content.lower()):
-            await message.channel.send('Welcome to BE')
+        if _get(message.guild.id, 'toggle', 'memes') and re.search(" do(es)? ?n'?o?t work", message.content.lower()):
+            cd = cd_memes(message)
+            if cd is None:
+                await message.channel.send('You guys are enjoying this too much')
+            elif cd is False:
+                await message.channel.send('Welcome to BE')
 
     @commands.command(name='alive')
     async def alive(self, ctx):
         """Check if TRB is alive"""
         await ctx.message.add_reaction(Emojis.thumbs_up)
-
-    @commands.command(name='toggle_memes')
-    @staff_command()
-    async def toggle_memes(self, ctx):
-        """Toggle 'Welcome to BE' listener"""
-        with GuildConfig(ctx.guild.id) as guildconfig:
-            memes = not guildconfig['toggle']['memes']
-            guildconfig['toggle']['memes'] = memes
-        await ctx.send(f'`Welcome to BE` set to {memes}')
 
     @commands.command(name='say')
     @mod_command()

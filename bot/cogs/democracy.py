@@ -9,9 +9,14 @@ from discord.ext import tasks, commands
 from discord.utils import sleep_until
 
 from bot.constants import Colours, Emojis, Icons
+from bot.variables import _get
+from bot.utils.checks import home_discord_check
 from bot.utils.requests import fetch_text
 
 log = logging.getLogger(__name__)
+
+roleconverter = commands.RoleConverter()
+userconverter = commands.UserConverter()
 
 async def get_entries(url):
     """
@@ -55,13 +60,12 @@ class Democracy(commands.Cog):
         pass
 
     async def cog_check(self, ctx):
-        """TechRock-only check"""
-        return ctx.guild.id==659832580731961374
+        return home_discord_check(ctx)
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Check for new application entries on when bot ready"""
-        await self.post_entries()
+        #await self.post_entries()
         pass
 
     @tasks.loop(hours=24)
@@ -80,76 +84,77 @@ class Democracy(commands.Cog):
         """Post new application entries to guild application channel"""
         log.info('Checking for new application entries')
 
-        checklist_urls = {
-            'cmp': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShlqb3iFZL5HpvWe62-hXeRJ_j6CtSo_TUzjCE2h-lou4bHdFQJKcmDx97VvzjFAze2i9vIzl2ErEs/pub?gid=181078935&single=true&output=csv'
-        }
-
-        new_entries = await get_entries(checklist_urls['cmp'])
-        userconverter = commands.UserConverter()
         sargs = '#_-'
+        for guild in self.bot.guilds:
 
-        cid = 661372317212868620
-        entry_channel = self.bot.get_channel(cid)
-
-        for new_entry in new_entries:
-
-            entry_embed = Embed(colour=Colours.techrock)
-            for key, value in new_entry.items():
-
-                value = 'None' if value=='' else str(value)
-
-                # Embed Description bool
-                if key[0]=='*':
-                    if value!='None':
-                        entry_embed.description = key[1:]
-                    continue
-
-                if key[0]=='.':
-                    continue
-
-                inline = True
-                while key[0] in sargs:
-
-                    # Title and User Avatar
-                    if key[0]=='#':
-                        try:
-                            entry_user = await userconverter.convert(entry_channel, value)
-                            icon_url = entry_user.avatar_url
-                        except:
-                            icon_url = Icons.techrock
-
-                    elif key[0]=='_':
-                        inline = False
-
-                    # Split uploads into hyperlinks
-                    elif key[0]=='-' and value!='None':
-                        media_links = value.split(', ')
-                        value = ''
-                        for i, link in enumerate(media_links, 1):
-                            value += f'[{i}]({link}) '
-
-                    else:
-                        raise
-
-                    key = key[1:]
-
-                entry_embed.add_field(name = key, value=value, inline=inline)
-
-            entry_embed.set_author(name='CMP Application', icon_url=icon_url)
-            msg = await entry_channel.send(embed=entry_embed)
-            await msg.add_reaction(Emojis.thumbs_up)
-            await msg.add_reaction(Emojis.thumbs_down)
+            guild_config = _get(guild.id, 'democracy')
+            cid = guild_config['channel']
+            if cid is None:
+                continue
+            entry_channel = self.bot.get_channel(cid)
+            new_entries = await get_entries(guild_config['url'])
+            for new_entry in new_entries:
+    
+                entry_embed = Embed(colour=Colours.techrock)
+                for key, value in new_entry.items():
+    
+                    value = 'None' if value=='' else str(value)
+                    # Embed Description bool
+                    if key[0]=='*':
+                        if value!='None':
+                            entry_embed.description = key[1:]
+                        continue
+                    # Skip field
+                    if key[0]=='.':
+                        continue
+    
+                    inline = True
+                    while key[0] in sargs:
+    
+                        # Title and User Avatar
+                        if key[0]=='#':
+                            try:
+                                entry_user = await userconverter.convert(entry_channel, value)
+                                icon_url = entry_user.avatar_url
+                            except:
+                                icon_url = Icons.techrock
+    
+                        elif key[0]=='_':
+                            inline = False
+    
+                        # Split uploads into hyperlinks
+                        elif key[0]=='-' and value!='None':
+                            media_links = value.split(', ')
+                            value = ''
+                            for i, link in enumerate(media_links, 1):
+                                value += f'[{i}]({link}) '
+    
+                        key = key[1:]
+    
+                    entry_embed.add_field(name = key, value=value, inline=inline)
+    
+                entry_embed.set_author(name='CMP Application', icon_url=icon_url)
+                msg = await entry_channel.send(embed=entry_embed)
+                await msg.add_reaction(Emojis.thumbs_up)
+                await msg.add_reaction(Emojis.thumbs_down)
 
     @commands.command(name='nominate')
     @commands.has_role('Helper')
-    async def nominate(self, ctx, nominee: Member):
+    async def nominate(self, ctx, nominee: Member, role=None):
 
         await ctx.message.delete()
 
-        cid = 661372317212868620
+        guild_config = _get(guild.id, 'democracy')
+        cid = guild_config['channel']
         entry_channel = self.bot.get_channel(cid)
 
-        title = role + ' Role Nomination'
+        if role is None:
+            role = guild_config['default']
+        else:
+            if role.lower not in guild_config['roles']:
+                return
+
+        title = role.capitalize() + ' Role Nomination'
 
         datefmt = '%Y %b %d'
         join_date = nominee.joined_at.strftime(datefmt)
@@ -162,7 +167,7 @@ class Democracy(commands.Cog):
         footer_text = 'Votes will be counted on ' + count_datetime.isoformat() + 'Z'
 
         nomination = Embed(colour=Colours.techrock)
-        nomination.set_author(name='Trusted Role Nomination', icon_url = nominee.avatar_url)
+        nomination.set_author(name= title, icon_url = nominee.avatar_url)
         nomination.add_field(name = 'Nominee',      value = nominee.display_name, inline=False)
         nomination.add_field(name = 'Joined',       value = join_date)
         nomination.add_field(name = 'Registered',   value = regi_date)

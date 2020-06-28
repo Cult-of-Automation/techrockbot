@@ -206,25 +206,24 @@ class Mcbecl(commands.Cog, name='MCBE Changelog'):
             channel = ctx.channel
 
         branch = branch.lower()
+        guild_config = GuildConfig.get_config(ctx.guild.id)
 
-        with GuildConfig(ctx.guild.id) as guildconfig:
+        # Get guild's update channel dictionary
+        update_channels = guild_config.updates
+        all_branches = list(update_channels.keys())
 
-            # Get guild's update channel dictionary
-            update_channels = guildconfig['updates']
-            all_branches = list(update_channels.keys())
+        # Default to all update branches
+        # Check [branch] argument
+        if branch=='all':
+            setlist = all_branches
+        elif branch in all_branches:
+            setlist = [branch]
+        else:
+            valid = ', '.join(all_branches)
+            await ctx.send(f'`{branch}` is not a valid update branch: {valid}')
 
-            # Default to all update branches
-            # Check [branch] argument
-            if branch=='all':
-                setlist = all_branches
-            elif branch in all_branches:
-                setlist = [branch]
-            else:
-                valid = ', '.join(all_branches)
-                await ctx.send(f'`{branch}` is not a valid update branch: {valid}')
-
-            for _branch in setlist:
-                guildconfig['updates'][_branch] = channel.id
+        for _branch in setlist:
+            guildconfig.updates[_branch] = channel.id
 
         await ctx.send(f'Channel for {branch} updates set to {channel.mention}')
 
@@ -234,7 +233,7 @@ class Mcbecl(commands.Cog, name='MCBE Changelog'):
 
         branch = branch.lower()
 
-        with GuildConfig(ctx.guild.id) as guildconfig:
+        with GuildConfigEdit(ctx.guild.id) as guildconfig:
 
             # Get guild's update channel dictionary
             update_channels = guildconfig['updates']

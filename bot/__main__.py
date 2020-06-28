@@ -1,5 +1,5 @@
 # Bot for the TechRock Discord
-import discord
+from discord import CustomActivity
 from discord.ext import commands
 
 from bot.bot import Bot
@@ -8,7 +8,7 @@ from bot.variables import _prefix
 
 bot = Bot(
     command_prefix=_prefix,
-    activity=discord.CustomActivity(name='Welcome to BE'),
+    activity=CustomActivity(name='Welcome to BE'),
     case_insensitive=True
 )
 

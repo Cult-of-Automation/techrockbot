@@ -21,7 +21,7 @@ def monkeypatch_trace(self: logging.Logger, msg: str, *args, **kwargs) -> None:
 Logger.trace = monkeypatch_trace
 
 DEBUG_MODE = os.getenv('DEBUG_MODE', False)
-print('DEBUG_MODE is', DEBUG_MODE)
+print('DEBUG_MODE is', 'on' if DEBUG_MODE else 'off')
 
 LOG_DIR = Path('logs')
 LOG_DIR.mkdir(exist_ok=True)

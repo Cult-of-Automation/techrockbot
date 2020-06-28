@@ -1,31 +1,31 @@
-prefix: "trb "
-
-roles:
+config_version: '1.0'
+cooldown:
+    memes:
+        bucket: channel
+        duration: 120
+        enabled: false
+        limit: 3
+democracy:
+    channel: null
+    default: null
+    roles:
+    - null
+    url: null
 group:
     mods:
-    - "admin"
-    - "moderator"
+    - admin
+    - moderator
     staff:
-    - "admin"
-    - "moderator"
-    - "helper"
-
+    - admin
+    - moderator
+    - helper
+prefix: 'trb '
+roles: null
 status:
-    default: "all"
-    aliases:
-updates:
-    beta: 
-    release: 
-democracy:
-    default:
-    roles:
-
+    aliases: null
+    default: all
 toggle:
-    memes: False
-cooldown:
-    memes: 
-    - False
-    - 3
-    - 120
-
-config_version: "1.0"
+    memes: false
+updates:
+    beta: null
+    release: null
