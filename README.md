@@ -10,13 +10,14 @@ TechRock has no affiliation with Minecraft, Mojang or Microsoft.
 
 ## Features
 
-- Ping TechRock servers for status
-- Retrieves changelog articles for new MCBE updates
-- Upload .mcstructure files from designated channel to server
+- Ping TechRock servers for status with [py-mcpe](https://github.com/w-gao/py-mcpe-stats)
+- Check daily and post new MCBE updates [Minecraft Feedback: Knowledge Base](https://feedback.minecraft.net/hc/en-us/categories/115000410252)
+- Upload .mcstructure files from designated channel to server via FTP
 
 Planned:
 
 - Retrieves new server applications for voting
 Auto-add roles, retrieves Xbox username XUID for server permissions
-- Add MoJira bugs to bug index
+- Retrieve info on MoJIRA bug reports like [Eigenbot](https://github.com/commandblockguy/EigenBot)
 - Execute console commands to Minecraft servers
+Restart server with bot command
