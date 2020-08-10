@@ -1,9 +1,6 @@
 from typing import Callable
-
-from discord import Colour, Embed, Member
-from discord.errors import NotFound
 from discord.ext import commands
-from discord.ext.commands import CheckFailure, Cog, Context
+from discord.ext.commands import Context
 
 from bot.utils.checks import staff_command_check, mod_command_check
 

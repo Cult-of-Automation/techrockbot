@@ -79,25 +79,28 @@ class Status(commands.Cog):
     @staff_command()
     async def status_default(self, ctx, ip_port=None):
         """
-        Set the default server/server alias for the status command
+        Set/show the default server/server alias for the status command
         [e.g. 0.0.0.0:19132] To ping all aliases set to [all]
         """
-        with GuildConfig(ctx.guild.id) as guildconfig:
-            if ip_port is None:
-                ip_port = guildconfig['status']['default']
-            else:
-                guildconfig['status']['default'] = ip_port
-            try:
-                alias_value = guildconfig['status']['aliases'][ip_port]
-            except:
-                alias_value = None
+        alias_value = guildconfig.status['aliases'].get(ip_port, None)
+        guild_config = GuildConfig.get_config(ctx.guild.id)
+
+        # Set configuration if argument is given
+        if ip_port is None:
+            ip_port = guild_config.status['default']
+        else:
+            guild_config.status['default'] = ip_port
 
         if ip_port=='all':
-            await ctx.send('`status` command will ping all aliases by default\nRun `status_aliases` to get a list of them')
+            response = (
+                '`status` command will ping all aliases by default\n'
+                'Run `status_alias` command to get a list of them'
+            )
         elif alias_value is not None:
-            await ctx.send(f'`status` command will ping {ip_port} ({alias_value}) by default')
+            response = f'`status` command will ping {ip_port} ({alias_value}) by default'
         else:
-            await ctx.send(f'`status` command will ping {ip_port} by default')
+            response = f'`status` command will ping {ip_port} by default'
+        await ctx.send(response)
 
     @commands.group(name='status_alias')
     async def status_alias(self, ctx):
@@ -109,7 +112,9 @@ class Status(commands.Cog):
             if aliases is None:
                 await ctx.send(f'No server aliases have been set for {ctx.guild.name}')
                 return
-            alias_list = discord.Embed(title=f'{ctx.guild.name} Status Aliases',colour=0x4b4740)
+            title = f'{ctx.guild.name} Status Aliases'
+            alias_list = Embed(colour=Colours.techrock)
+            alias_list.set_author(name=title, icon_url=Icons.techrock)
             for alias in aliases:
                 alias_list.add_field(name=alias,value=aliases[alias])
             await ctx.send(embed=alias_list)
@@ -121,23 +126,26 @@ class Status(commands.Cog):
         Add a server alias for the status command
         [e.g. 0.0.0.0:19132]
         """
-        with GuildConfig(ctx.guild.id) as guildconfig:
-            try:
-                guildconfig['status']['aliases'].update({alias:ip_port})
-            except:
-                guildconfig['status']['aliases'] = {alias:ip_port}
+        guild_config = GuildConfig.get_config(ctx.guild.id)
+        try:
+            guild_config.status['aliases'].update({alias:ip_port})
+        except AttributeError:
+            guild_config.status['aliases'] = {alias:ip_port}
         await ctx.send(f'Added `{alias}` as a status alias')
 
     @status_alias.command(name = 'remove')
     @staff_command()
     async def status_alias_remove(self, ctx, alias):
         """Remove a server alias for the status command"""
-        with GuildConfig(ctx.guild.id) as guildconfig:
-            if alias not in guildconfig['status']['aliases']:
-                await ctx.send(f'`{alias}` is not a status alias')
-                return
-            del guildconfig['status']['aliases'][alias]
-        await ctx.send(f'Removed `{alias}` as a status alias')
+        guild_config = GuildConfig.get_config(ctx.guild.id)
+        try:
+            del guild_config.status['aliases'][alias]
+        except KeyError:
+            response = f'`{alias}` is not a status alias'
+        else:
+            response = f'Removed `{alias}` as a status alias'
+        finally:
+            await ctx.send(response)
 
 def setup(bot):
     bot.add_cog(Status(bot))

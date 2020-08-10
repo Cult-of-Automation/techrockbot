@@ -1,7 +1,7 @@
 import logging
-import aiohttp
 import csv
 import io
+import pickle
 
 from datetime import datetime, timedelta
 from discord import Embed, Member
@@ -9,103 +9,152 @@ from discord.ext import tasks, commands
 from discord.utils import sleep_until
 
 from bot.constants import Colours, Emojis, Icons
+from bot.variables import _get
+from bot.utils.checks import home_discord_check
+from bot.utils.requests import fetch_text
 
 log = logging.getLogger(__name__)
 
-async def fetch(url):
-    async with aiohttp.request('GET', url) as resp:
-        assert resp.status == 200
-        return await resp.text()
+roleconverter = commands.RoleConverter()
+userconverter = commands.UserConverter()
 
-async def get_applications(url):
-
-    datefmt = '%d/%m/%Y %H:%M:%S'
-    now = datetime.utcnow().strftime(datefmt)
-
+async def get_entries(url):
+    """
+    Get timestamped rows from csv file
+    Returns new rows from last check
+    """
     # Get datetime of last check
-    with open('lastappcheck', 'r+') as f:
-        last_check_raw = f.read()
+    now = {'appcheck': datetime.utcnow()}
+    with open('.pickle', 'r+b') as f:
+        _pickle = pickle.load(f)
+        try:
+            last_check = _pickle['democracy']['appcheck']
+        except KeyError:
+            log.warning('Unable to retrieve last check datetime')
+            return []
+        _pickle.update({'democracy': now})
         f.seek(0)
-        f.write(now)
-    last_check = datetime.strptime(last_check_raw, datefmt)
+        pickle.dump(_pickle, f)
+        f.truncate()
 
-    # Get list of apps with timestamp after last_check
-    with io.StringIO(await fetch(url)) as f:
+    # Get list of applications entries with timestamp after last_check
+    new_entries = []
+    datefmt = '%d/%m/%Y %H:%M:%S'
+    with io.StringIO(await fetch_text(url)) as f:
+        next(f)
         reader = csv.DictReader(f)
-        new_apps = [row for row in reader if last_check <= datetime.strptime(row['Timestamp'], datefmt)]
-    return new_apps
+        for row in reader:
+            row_timestamp = datetime.strptime(row['.Timestamp'], datefmt)
+            if last_check <= row_timestamp:
+                new_entries.append(row)
+    return new_entries
 
 class Democracy(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.dailyapp.start()
+        #self.loop_entries.start()
 
     def cog_unload():
-        self.dailyapp.cancel()
+        #self.loop_entries.cancel()
+        pass
 
-    # TechRock-only check
     async def cog_check(self, ctx):
-        return ctx.guild.id==403047405877985281
+        return home_discord_check(ctx)
 
-    async def post_new_apps(self):
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Check for new application entries on when bot ready"""
+        #await self.post_entries()
+        pass
 
-        log.info('Checking for new applications')
+    @tasks.loop(hours=24)
+    async def loop_entries(self):
+        await self.post_entries()
 
-        checklist_urls = {
-            'cmp': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vShlqb3iFZL5HpvWe62-hXeRJ_j6CtSo_TUzjCE2h-lou4bHdFQJKcmDx97VvzjFAze2i9vIzl2ErEs/pub?gid=181078935&single=true&output=csv',
-            'smp': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRTqR018lkhKqOf4ToC5RJC4WBFP31Sv7hPD0-eZMXLQf5mmPCo5STU4v1z6s3HIvT2rIG4F1IRqC7N/pub?gid=1666125740&single=true&output=csv'
-        }
+    @loop_entries.before_loop
+    async def before_loop_entries(self):
+        """Sync daily check to T00:00"""
+        midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        midnight_next = tea_today if datetime.utcnow().hour < 0 else midnight_today + timedelta(1)
+        log.info(f'Next check for application entries at {midnight_next}')
+        await sleep_until(midnight_next)
 
-        new_apps = await get_applications(checklist_urls['cmp'])
-        cid = 676429957827788800
-        app_channel = self.bot.get_channel(cid)
-        userconverter = commands.UserConverter()
+    async def post_entries(self):
+        """Post new application entries to guild application channel"""
+        log.info('Checking for new application entries')
 
-        for new_app in new_apps:
+        sargs = '#_-'
+        for guild in self.bot.guilds:
 
-            app = ['None' if value=='' else str(value) for value in new_app.values()]
-
-            app_embed = Embed(colour=Colours.techrock)
-
-            # Get user
-            try:
-                app_user = await userconverter.convert(app_channel, app[2])
-                app_embed.set_author(name='CMP Application', icon_url = app_user.avatar_url)
-            except:
-                app_embed.set_author(name='CMP Application')
-
-            app_embed.add_field(name = 'Discord Username',      value = app[2])
-            app_embed.add_field(name = 'GamerTag',              value = app[3])
-            app_embed.add_field(name = 'Age',                   value = app[4])
-            app_embed.add_field(name = 'Technical Niches',      value = app[5])
-            app_embed.add_field(name = 'Minecraft Experience',  value = app[7], inline=False)
-            app_embed.add_field(name = 'Social Media',          value = app[8])
-            app_embed.add_field(name = 'Links',                 value = app[9])
-
-            # Split uploads into hyperlinks
-            if app[6]=='None':
-                media_links = 'None'
-            else:
-                media_links = ''
-                media_links_list = app[6].split(', ')
-                for i, link in enumerate(media_links_list, 1):
-                    media_links += f'[{i}]({link}) '
-
-            app_embed.add_field(name = 'Pictures/Videos',       value = media_links)
-
-            msg = await app_channel.send(embed=app_embed)
-            await msg.add_reaction(Emojis.thumbs_up)
-            await msg.add_reaction(Emojis.thumbs_down)
+            guild_config = _get(guild.id, 'democracy')
+            cid = guild_config['channel']
+            if cid is None:
+                continue
+            entry_channel = self.bot.get_channel(cid)
+            new_entries = await get_entries(guild_config['url'])
+            for new_entry in new_entries:
+    
+                entry_embed = Embed(colour=Colours.techrock)
+                for key, value in new_entry.items():
+    
+                    value = 'None' if value=='' else str(value)
+                    # Embed Description bool
+                    if key[0]=='*':
+                        if value!='None':
+                            entry_embed.description = key[1:]
+                        continue
+                    # Skip field
+                    if key[0]=='.':
+                        continue
+    
+                    inline = True
+                    while key[0] in sargs:
+    
+                        # Title and User Avatar
+                        if key[0]=='#':
+                            try:
+                                entry_user = await userconverter.convert(entry_channel, value)
+                                icon_url = entry_user.avatar_url
+                            except:
+                                icon_url = Icons.techrock
+    
+                        elif key[0]=='_':
+                            inline = False
+    
+                        # Split uploads into hyperlinks
+                        elif key[0]=='-' and value!='None':
+                            media_links = value.split(', ')
+                            value = ''
+                            for i, link in enumerate(media_links, 1):
+                                value += f'[{i}]({link}) '
+    
+                        key = key[1:]
+    
+                    entry_embed.add_field(name = key, value=value, inline=inline)
+    
+                entry_embed.set_author(name='CMP Application', icon_url=icon_url)
+                msg = await entry_channel.send(embed=entry_embed)
+                await msg.add_reaction(Emojis.thumbs_up)
+                await msg.add_reaction(Emojis.thumbs_down)
 
     @commands.command(name='nominate')
-    @commands.has_role('Member')
-    async def nominate(self, ctx, nominee: Member):
+    @commands.has_role('Helper')
+    async def nominate(self, ctx, nominee: Member, role=None):
 
         await ctx.message.delete()
 
-        cid = 676429957827788800
-        app_channel = self.bot.get_channel(cid)
+        guild_config = _get(guild.id, 'democracy')
+        cid = guild_config['channel']
+        entry_channel = self.bot.get_channel(cid)
+
+        if role is None:
+            role = guild_config['default']
+        else:
+            if role.lower not in guild_config['roles']:
+                return
+
+        title = role.capitalize() + ' Role Nomination'
 
         datefmt = '%Y %b %d'
         join_date = nominee.joined_at.strftime(datefmt)
@@ -115,38 +164,18 @@ class Democracy(commands.Cog):
         midnight_next = tea_today if datetime.utcnow().hour < 0 else midnight_today + timedelta(1)
         count_datetime = midnight_next + timedelta(3)
         
-        footer_text = 'Votes will be counted on ' + count_datetime.isoformat() + 'Z\n3/4 Qualified Majority Needed'
+        footer_text = 'Votes will be counted on ' + count_datetime.isoformat() + 'Z'
 
         nomination = Embed(colour=Colours.techrock)
-        nomination.set_author(name='Trusted Role Nomination', icon_url = nominee.avatar_url)
+        nomination.set_author(name= title, icon_url = nominee.avatar_url)
         nomination.add_field(name = 'Nominee',      value = nominee.display_name, inline=False)
         nomination.add_field(name = 'Joined',       value = join_date)
         nomination.add_field(name = 'Registered',   value = regi_date)
         nomination.set_footer(text = footer_text, icon_url = Icons.techrock)
         
-        msg = await app_channel.send(embed=nomination)
+        msg = await entry_channel.send(embed=nomination)
         await msg.add_reaction(Emojis.thumbs_up)
         await msg.add_reaction(Emojis.thumbs_down)
-
-
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        # Check for new apps on when bot ready
-        await self.post_new_apps()
-
-    @tasks.loop(hours=24)
-    async def dailyapp(self):
-        await self.post_new_apps()
-
-    @dailyapp.before_loop
-    async def before_dailyapp(self):
-        # Gets next T00:00Z
-        midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-        midnight_next = tea_today if datetime.utcnow().hour < 0 else midnight_today + timedelta(1)
-        # Sync daily check to T00:00Z
-        log.info(f'Application loop will begin at {midnight_next}')
-        await sleep_until(midnight_next)
 
 def setup(bot):
     bot.add_cog(Democracy(bot))

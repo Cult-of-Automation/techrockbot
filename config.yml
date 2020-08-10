@@ -1,6 +1,7 @@
 bot:
 
     token:                          !ENV "BOT_TOKEN"
+    home_discord:                   659832580731961374
 
 style:
 
@@ -40,6 +41,7 @@ server:
             un:                     !ENV "FTP_SMP_UN"
             pw:                     !ENV "FTP_SMP_PW"
 
+            channel:                null
             userlist:               "/whitelist.json"
 
         cmp:
@@ -49,6 +51,7 @@ server:
             un:                     !ENV "FTP_CMP_UN"
             pw:                     !ENV "FTP_CMP_PW"
 
+            channel:                661372317212868620
             userlist:               "/permissions.json"
 
 config:

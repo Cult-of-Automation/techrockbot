@@ -4,22 +4,23 @@ import json
 import logging
 
 from discord.ext import commands
-from bot.utils.ftp import Ftp
-from bot.utils.xbox import getxuid
 from bot.variables import _get
 from bot.constants import Emojis, Server as ServerConfig
 from bot.decorators import staff_command
+from bot.utils.requests import fetch_xuid, ftp_write, ftp_read
 
 log = logging.getLogger(__name__)
 
-emote = [
+UPLOAD_CHANNELS = [s['channel'] for s in ServerConfig.ftp.values() if s['channel']]
+
+EMOTE = [
     Emojis.okay,
     Emojis.error,
     Emojis.warning,
     Emojis.loading
 ]
 
-errors = [
+ERRORS = [
     '           Okay',
     'Transfer Failed',
     ' Already Exists'
@@ -33,17 +34,27 @@ class Server(commands.Cog):
 
     # Temporary TechRock-only check
     async def cog_check(self, ctx):
-        return ctx.guild.id==403047405877985281
+        return ctx.guild.id==659832580731961374
 
     # CMP .mcstructure file upload
     @commands.Cog.listener()
     async def on_message(self, message):
 
-        if message.channel.id != 661730461206183937 or not message.attachments:
+        if message.channel.id not in UPLOAD_CHANNELS or not message.attachments:
+            return
+
+        # Get server alias
+        server_alias = None
+        for alias, server in ServerConfig.ftp.items():
+            if message.channel.id == server['channel']:
+                server_alias = alias
+                break
+        if server_alias is None:
+            log.warning(f'Cannot find server alias associated with channel `{message.channel.name}`!')
             return
 
         # "Loading" reaction
-        await message.add_reaction(emote[3])
+        await message.add_reaction(EMOTE[3])
 
         filelog = []
         errno = 0
@@ -60,17 +71,17 @@ class Server(commands.Cog):
                 # Retrieve attachment
                 await attachment.save(file_in)
                 # Upload .mcstructure file
-                result = await Ftp._write(self, ServerConfig.ftp['cmp'], file_name, file_size, file_in, path)
+                result = await ftp_write(ServerConfig.ftp[server_alias], file_name, file_size, file_in, path)
 
-            filelog.append(f'{errors[result]} | {file_name}')
+            filelog.append(f'{ERRORS[result]} | {file_name}')
             if errno < result:
                 errno = result
 
         # Replace reaction with results
         await message.clear_reactions()
-        await message.add_reaction(emote[errno])
+        await message.add_reaction(EMOTE[errno])
 
-        # Send errors on multiple files        
+        # Send ERRORS on multiple files        
         if len(message.attachments) > 1 and errno:
             error_list = '\n'.join(filelog)
             message.channel.send(f'```{error_list}```')
@@ -85,7 +96,7 @@ class Server(commands.Cog):
             userlist_path = ServerConfig.ftp[server]['userlist']
             
             # "Loading" reaction
-            await ctx.message.add_reaction(emote[3])
+            await ctx.message.add_reaction(EMOTE[3])
 
             # Build dict for JSON entry
             entry = {}
@@ -96,10 +107,10 @@ class Server(commands.Cog):
             else:
                 raise
             entry['name'] = user
-            entry['xuid'] = await getxuid(user)
+            entry['xuid'] = await fetch_xuid(user)
             
             # Fetch permissions.json as list of dicts
-            perms_raw = await Ftp._read(self, ServerConfig.ftp[server], userlist_path)
+            perms_raw = await ftp_read(self, ServerConfig.ftp[server], userlist_path)
             perms = json.loads(perms_raw)
             
             perms.append(entry)
@@ -107,11 +118,11 @@ class Server(commands.Cog):
             # Dump list to JSON and upload
             with io.BytesIO() as output:
                 size = output.write(json.dumps(perms, indent=4).encode('utf-8'))
-                result = await Ftp._write(self, ServerConfig.ftp[server], userlist_path, size, output, '/', True)
+                result = await ftp_write(ServerConfig.ftp[server], userlist_path, size, output, '/', True)
 
             # Replace reaction with results
             await ctx.message.clear_reactions()
-            await ctx.message.add_reaction(emote[result])
+            await ctx.message.add_reaction(EMOTE[result])
 
         except KeyError:
 
@@ -127,7 +138,7 @@ class Server(commands.Cog):
         try:
             userlist_path = ServerConfig.ftp[server]['userlist']
 
-            perms_raw = await Ftp._read(self, ServerConfig.ftp[server], userlist_path)
+            perms_raw = await ftp_read(ServerConfig.ftp[server], userlist_path)
             perms = json.loads(perms_raw)
 
             names = []

@@ -76,12 +76,12 @@ def check_required_keys(keys):
             )
             raise
 
-try:
-    required_keys = _CONFIG_YAML['config']['required_keys']
-except KeyError:
-    pass
-else:
-    check_required_keys(required_keys)
+# try:
+#     required_keys = _CONFIG_YAML['config']['required_keys']
+# except KeyError:
+#     pass
+# else:
+#     check_required_keys(required_keys)
 
 class YAMLGetter(type):
     subsection = None
@@ -104,18 +104,21 @@ class YAMLGetter(type):
     def __getitem__(cls, name):
         return cls.__getattr__(name)
 
+
 # Dataclasses
 class Bot(metaclass=YAMLGetter):
     section = 'bot'
 
     token: str
-    test_token: str
+    home_discord: int
+
 
 class Colours(metaclass=YAMLGetter):
     section = 'style'
     subsection = 'colours'
 
     techrock: int
+
 
 class Emojis(metaclass=YAMLGetter):
     section = 'style'
@@ -135,12 +138,14 @@ class Emojis(metaclass=YAMLGetter):
     circle_green: str
     circle_blue: str
 
+
 class Icons(metaclass=YAMLGetter):
     section = 'style'
     subsection = 'icons'
 
     techrock: str
     techrock_square: str
+
 
 class Server(metaclass=YAMLGetter):
     section = 'server'

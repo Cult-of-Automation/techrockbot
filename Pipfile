@@ -11,7 +11,11 @@ pyyaml = "~=5.1"
 logmatic-python = "~=0.1"
 py-mcpe-stats = {editable = true,git = "https://github.com/w-gao/py-mcpe-stats.git"}
 fuzzywuzzy = "~=0.17"
+<<<<<<< HEAD
 lxml = "~=4.4"
+=======
+lxml = "*"
+>>>>>>> 3c6de9e0713c17531c16a4d261b56a435e86fa6e
 
 [dev-packages]
 
@@ -20,4 +24,3 @@ python_version = "3.8"
 
 [scripts]
 start = "python3 -m bot"
-test = "python3 -m tests"
