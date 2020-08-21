@@ -27,11 +27,12 @@ class GuildConfig:
         self.full_path = self.location + self.file_name
         self.id, self.file_type = file_name.split('.')
         self.storage = self.load_yaml()
+        self.original = self.storage.copy()
         self.add_to_library(self.id, self)
 
     @property
     def has_been_modified(self):
-        return self.storage != self.load_yaml()
+        return self.storage != self.original
 
     def load_yaml(self):
         try:

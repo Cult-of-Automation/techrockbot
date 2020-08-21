@@ -6,7 +6,7 @@ from bot.variables import _get
 
 log = logging.getLogger(__name__)
 
-class TriCooldown(object): -> Callable:
+class TriCooldown(object):
     """
     Custom cooldown class which returns a tribool.
     Retrieves the value under the cd_name argument from the guilds YAML

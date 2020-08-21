@@ -47,7 +47,7 @@ else:
     logging_handlers.append(json_handler)
     """
     fmt_handler = logging.StreamHandler()
-    fmt_handler.formatter = logging.Formatter('%(asctime)s Bot: | %(name)33s | %(levelname)8s | %(message)s')
+    fmt_handler.formatter = logging.Formatter('%(asctime)s Bot: | %(name)s \n %(levelname)8s | %(message)s')
     logging_handlers.append(fmt_handler)
     
 logging.basicConfig(
